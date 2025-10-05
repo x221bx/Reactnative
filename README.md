@@ -1,18 +1,18 @@
-% React Native (Expo) App
+React Native (Expo) App
 
-مشروع React Native باستخدام Expo.
+A minimal React Native project using Expo.
 
-## المتطلبات
-- Node.js و npm
-- Expo CLI (اختياري) — يمكن التشغيل عبر `npx`
+Requirements
+- Node.js and npm
+- Expo CLI (optional) — can run via `npx`
 
-## التشغيل محليًا
-- تثبيت الاعتمادات: `npm install`
-- بدء التطبيق: `npm start` أو `npx expo start`
-- تشغيل على Android أو iOS أو Web من واجهة Expo
+Run locally
+- Install deps: `npm install`
+- Start: `npm start` or `npx expo start`
+- Use Expo UI to run on Android, iOS, or Web
 
-## بناء نسخة الويب (للنشر إن لزم)
+Build for web (optional deploy)
 - `npx expo export --platform web`
-- يَنتج مجلد `dist/` يمكن رفعه إلى GH Pages أو Vercel.
+- Outputs `dist/` for GH Pages or Vercel
 
-ملاحظة: لم يتم تثبيت فكرة محددة للمشروع هنا عمدًا.
+Note: No specific app idea is chosen yet on purpose.
