@@ -27,10 +27,10 @@ export default function HomeScreen() {
 
     // Main categories with icons
     const mainCategories = [
-        { id: 'math', label: t('categories.math', 'Math'), icon: '📐' },
-        { id: 'literature', label: t('categories.literature', 'Literature'), icon: '📚' },
-        { id: 'english', label: t('categories.english', 'English'), icon: '🗣️' },
-        { id: 'art', label: t('categories.art', 'Art'), icon: '🎨' },
+        { id: 'Math', label: t('categories.math', 'Math'), icon: '📐' },
+        { id: 'Literature', label: t('categories.literature', 'Literature'), icon: '📚' },
+        { id: 'English', label: t('categories.english', 'English'), icon: '🗣️' },
+        { id: 'Art', label: t('categories.art', 'Art'), icon: '🎨' },
     ];
 
     const styles = StyleSheet.create({
@@ -262,214 +262,205 @@ export default function HomeScreen() {
         },
     });
 
-    // Render section header with optional "View All"
+    // Small, focused section components for clarity
     const SectionHeader = ({ title, subtitle, onViewAll }) => (
         <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{title}</Text>
-            {subtitle && <Text style={styles.sectionSubtitle}>{subtitle}</Text>}
-            {onViewAll && (
+            {subtitle ? <Text style={styles.sectionSubtitle}>{subtitle}</Text> : null}
+            {onViewAll ? (
                 <TouchableOpacity style={styles.viewAllButton} onPress={onViewAll}>
                     <Text style={styles.viewAllText}>{t('common.viewAll', 'View All')}</Text>
                 </TouchableOpacity>
-            )}
+            ) : null}
         </View>
     );
+
+    const HeroSection = ({ user, navigation, t }) => (
+        <View style={styles.hero}>
+            <Image
+                source={{ uri: 'https://picsum.photos/seed/hero/1200/600' }}
+                style={styles.heroImage}
+                resizeMode="cover"
+            />
+            <LinearGradient colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)']} style={styles.heroOverlay}>
+                <Text style={styles.heroTitle}>{t('home.heroTitle', 'Learn with Experts')}</Text>
+                <Text style={styles.heroSubtitle}>{t('home.heroSubtitle', 'Discover high-quality courses with top mentors')}</Text>
+                <TouchableOpacity
+                    style={styles.heroCTA}
+                    onPress={() => user ? navigation.navigate('Courses') : navigation.navigate('Auth', { screen: 'Register' })}
+                >
+                    <Text style={styles.heroCTAText}>
+                        {user ? t('home.exploreCourses', 'Explore Courses') : t('auth.startLearning', 'Start Learning Now')}
+                    </Text>
+                </TouchableOpacity>
+            </LinearGradient>
+        </View>
+    );
+
+    const CategoriesSection = ({ categories, navigation }) => (
+        <View style={styles.section}>
+            <SectionHeader
+                title={t('home.categoriesTitle', 'Explore by Subject')}
+                subtitle={t('home.categoriesSubtitle', 'Choose your area of interest')}
+            />
+            <View style={styles.categoriesGrid}>
+                {categories.map((category) => (
+                    <TouchableOpacity
+                        key={category.id}
+                        style={styles.categoryCard}
+                        onPress={() => navigation.navigate('Courses', { category: category.id })}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={styles.categoryIcon}>{category.icon}</Text>
+                        <Text style={styles.categoryLabel}>{category.label}</Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+    );
+
+    const FeaturedCoursesSection = ({ items, navigation }) => (
+        <View style={styles.section}>
+            <SectionHeader
+                title={t('courses.featured', 'Featured Courses')}
+                subtitle={t('courses.featuredSubtitle', 'Top-rated courses chosen for you')}
+                onViewAll={() => navigation.navigate('Courses')}
+            />
+            <FlatList
+                data={items}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={styles.coursesContainer}
+                renderItem={({ item }) => (
+                    <View style={styles.courseCard}>
+                        <ProductCard
+                            image={item.image}
+                            title={item.title}
+                            subtitle={item.category || item.level || (Array.isArray(item.topics) ? item.topics[0] : 'General')}
+                            price={item.price}
+                            rating={item.rating}
+                            onPress={() => navigation.navigate('CourseDetail', { courseId: item.id })}
+                        />
+                    </View>
+                )}
+            />
+        </View>
+    );
+
+    const BenefitsSection = () => {
+        const benefits = [
+            t('home.benefit1', 'Master program knowledge at school'),
+            t('home.benefit2', 'Develop critical thinking skills'),
+            t('home.benefit3', 'Gain confidence in challenging situations'),
+            t('home.benefit4', 'Learn at your own pace with flexible schedules'),
+        ];
+        return (
+            <View style={styles.section}>
+                <SectionHeader
+                    title={t('home.benefitsTitle', 'Why Choose Our Platform?')}
+                    subtitle={t('home.benefitsSubtitle', 'Transform your learning experience')}
+                />
+                <View style={styles.benefitsList}>
+                    {benefits.map((benefit, index) => (
+                        <View key={index} style={styles.benefitItem}>
+                            <Text style={styles.benefitIcon}>✅</Text>
+                            <Text style={styles.benefitText}>{benefit}</Text>
+                        </View>
+                    ))}
+                </View>
+            </View>
+        );
+    };
+
+    const TopTeachersSection = ({ items, navigation }) => (
+        <View style={styles.section}>
+            <SectionHeader
+                title={t('teachers.top', 'Top Teachers')}
+                subtitle={t('teachers.topSubtitle', 'Learn from industry experts')}
+                onViewAll={() => navigation.navigate('Teachers')}
+            />
+            <FlatList
+                data={items}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={styles.teachersContainer}
+                renderItem={({ item }) => (
+                    <View style={styles.teacherCard}>
+                        <ProductCard
+                            image={item.image}
+                            title={item.name}
+                            subtitle={item.title || item.specialization || item.subject || 'Instructor'}
+                            rating={item.rating}
+                            onPress={() => navigation.navigate('TeacherDetail', { teacherId: item.id })}
+                        />
+                    </View>
+                )}
+            />
+        </View>
+    );
+
+    const ClassFeaturesSection = () => {
+        const features = [
+            t('home.feature1', 'Live Classes'),
+            t('home.feature2', 'Q&A Sessions'),
+            t('home.feature3', 'Recorded Lessons'),
+            t('home.feature4', 'Interactive Exercises'),
+        ];
+        return (
+            <View style={styles.section}>
+                <SectionHeader
+                    title={t('home.classFeatures', "What's in Our Classes?")}
+                    subtitle={t('home.classFeaturesSubtitle', 'Interactive learning experience')}
+                />
+                <Image source={{ uri: 'https://picsum.photos/seed/class/900/500' }} style={styles.classImage} resizeMode="cover" />
+                <View style={styles.featuresGrid}>
+                    {features.map((feature, index) => (
+                        <View key={index} style={styles.featureChip}>
+                            <Text style={styles.featureText}>{feature}</Text>
+                        </View>
+                    ))}
+                </View>
+            </View>
+        );
+    };
+
+    const FinalCTASection = ({ user, navigation }) => {
+        if (user) return null;
+        return (
+            <View style={styles.ctaSection}>
+                <Text style={styles.ctaTitle}>{t('home.ctaTitle', 'Ready to Start Learning?')}</Text>
+                <Text style={styles.ctaSubtitle}>{t('home.ctaSubtitle', 'Join thousands of students already learning')}</Text>
+                <TouchableOpacity style={styles.ctaButton} onPress={() => navigation.navigate('Auth', { screen: 'Register' })}>
+                    <Text style={styles.ctaButtonText}>{t('auth.getStarted', 'Get Started Free')}</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
 
     return (
         <View style={styles.container}>
             <AppHeader title={t('home.title')} showMenu />
 
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
-            >
-                {/* Hero Section */}
-                  <View style={styles.hero}>
-                      <Image
-                          source={{ uri: 'https://picsum.photos/seed/hero/1200/600' }}
-                          style={styles.heroImage}
-                          resizeMode="cover"
-                      />
-                      <LinearGradient
-                          colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)']}
-                          style={styles.heroOverlay}
-                      >
-                        <Text style={styles.heroTitle}>
-                            {t('home.heroTitle', 'Learn with Experts')}
-                        </Text>
-                        <Text style={styles.heroSubtitle}>
-                            {t('home.heroSubtitle', 'Discover high-quality courses with top mentors')}
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.heroCTA}
-                            onPress={() => user
-                                ? navigation.navigate('Courses')
-                                : navigation.navigate('Auth', { screen: 'Register' })
-                            }
-                        >
-                            <Text style={styles.heroCTAText}>
-                                {user
-                                    ? t('home.exploreCourses', 'Explore Courses')
-                                    : t('auth.startLearning', 'Start Learning Now')
-                                }
-                            </Text>
-                        </TouchableOpacity>
-                      </LinearGradient>
-                  </View>
+            <ScrollView showsVerticalScrollIndicator={true} contentContainerStyle={styles.scrollContent}>
+                <HeroSection user={user} navigation={navigation} t={t} />
 
-                {/* Stats Strip - Floating effect */}
                 <View style={styles.statsContainer}>
                     <StatsStrip />
                 </View>
 
-                {/* Categories - Grid Layout (No Horizontal Scroll!) */}
-                <View style={styles.section}>
-                    <SectionHeader
-                        title={t('home.categoriesTitle', 'Explore by Subject')}
-                        subtitle={t('home.categoriesSubtitle', 'Choose your area of interest')}
-                    />
-                    <View style={styles.categoriesGrid}>
-                        {mainCategories.map((category) => (
-                            <TouchableOpacity
-                                key={category.id}
-                                style={styles.categoryCard}
-                                onPress={() => navigation.navigate('Courses', { category: category.label })}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.categoryIcon}>{category.icon}</Text>
-                                <Text style={styles.categoryLabel}>{category.label}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
+                <CategoriesSection categories={mainCategories} navigation={navigation} />
+                <FeaturedCoursesSection items={featuredCourses} navigation={navigation} />
 
-                {/* Featured Courses */}
-                <View style={styles.section}>
-                    <SectionHeader
-                        title={t('courses.featured', 'Featured Courses')}
-                        subtitle={t('courses.featuredSubtitle', 'Top-rated courses chosen for you')}
-                        onViewAll={() => navigation.navigate('Courses')}
-                    />
-                    <FlatList
-                        data={featuredCourses}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        keyExtractor={(item) => item.id.toString()}
-                        contentContainerStyle={styles.coursesContainer}
-                        renderItem={({ item }) => (
-                            <View style={styles.courseCard}>
-                                <ProductCard
-                                    image={item.image}
-                                    title={item.title}
-                                    subtitle={item.category || item.level || (Array.isArray(item.topics) ? item.topics[0] : 'General')}
-                                    price={item.price}
-                                    rating={item.rating}
-                                    onPress={() => navigation.navigate('CourseDetail', { courseId: item.id })}
-                                />
-                            </View>
-                        )}
-                    />
-                </View>
-
-                {/* How It Works */}
                 <HowItWorks />
-
-                {/* Benefits Section */}
-                <View style={styles.section}>
-                    <SectionHeader
-                        title={t('home.benefitsTitle', 'Why Choose Our Platform?')}
-                        subtitle={t('home.benefitsSubtitle', 'Transform your learning experience')}
-                    />
-                    <View style={styles.benefitsList}>
-                        {[
-                            t('home.benefit1', 'Master program knowledge at school'),
-                            t('home.benefit2', 'Develop critical thinking skills'),
-                            t('home.benefit3', 'Gain confidence in challenging situations'),
-                            t('home.benefit4', 'Learn at your own pace with flexible schedules'),
-                        ].map((benefit, index) => (
-                            <View key={index} style={styles.benefitItem}>
-                                <Text style={styles.benefitIcon}>✅</Text>
-                                <Text style={styles.benefitText}>{benefit}</Text>
-                            </View>
-                        ))}
-                    </View>
-                </View>
-
-                {/* Top Teachers */}
-                <View style={styles.section}>
-                    <SectionHeader
-                        title={t('teachers.top', 'Top Teachers')}
-                        subtitle={t('teachers.topSubtitle', 'Learn from industry experts')}
-                        onViewAll={() => navigation.navigate('Teachers')}
-                    />
-                    <FlatList
-                        data={topTeachers}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        keyExtractor={(item) => item.id.toString()}
-                        contentContainerStyle={styles.teachersContainer}
-                        renderItem={({ item }) => (
-                            <View style={styles.teacherCard}>
-                                <ProductCard
-                                    image={item.image}
-                                    title={item.name}
-                                    subtitle={item.title || item.specialization || item.subject || 'Instructor'}
-                                    rating={item.rating}
-                                    onPress={() => navigation.navigate('TeacherDetail', { teacherId: item.id })}
-                                />
-                            </View>
-                        )}
-                    />
-                </View>
-
-                {/* Class Features */}
-                <View style={styles.section}>
-                    <SectionHeader
-                        title={t('home.classFeatures', 'What\'s in Our Classes?')}
-                        subtitle={t('home.classFeaturesSubtitle', 'Interactive learning experience')}
-                    />
-                    <Image
-                        source={{ uri: 'https://picsum.photos/seed/class/900/500' }}
-                        style={styles.classImage}
-                        resizeMode="cover"
-                    />
-                    <View style={styles.featuresGrid}>
-                        {[
-                            t('home.feature1', 'Live Classes'),
-                            t('home.feature2', 'Q&A Sessions'),
-                            t('home.feature3', 'Recorded Lessons'),
-                            t('home.feature4', 'Interactive Exercises'),
-                        ].map((feature, index) => (
-                            <View key={index} style={styles.featureChip}>
-                                <Text style={styles.featureText}>{feature}</Text>
-                            </View>
-                        ))}
-                    </View>
-                </View>
-
-                {/* Testimonials */}
+                <BenefitsSection />
+                <TopTeachersSection items={topTeachers} navigation={navigation} />
+                <ClassFeaturesSection />
                 <Testimonials />
-
-                {/* Final CTA */}
-                {!user && (
-                    <View style={styles.ctaSection}>
-                        <Text style={styles.ctaTitle}>
-                            {t('home.ctaTitle', 'Ready to Start Learning?')}
-                        </Text>
-                        <Text style={styles.ctaSubtitle}>
-                            {t('home.ctaSubtitle', 'Join thousands of students already learning')}
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.ctaButton}
-                            onPress={() => navigation.navigate('Auth', { screen: 'Register' })}
-                        >
-                            <Text style={styles.ctaButtonText}>
-                                {t('auth.getStarted', 'Get Started Free')}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
+                <FinalCTASection user={user} navigation={navigation} />
             </ScrollView>
         </View>
     );
 }
+

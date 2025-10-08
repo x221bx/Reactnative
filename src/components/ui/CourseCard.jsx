@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, StyleSheet, Image, Pressable } from 'react-native';
 import { Text, Card, IconButton } from 'react-native-paper';
 import { useTheme } from '../../hooks/useTheme';
@@ -6,27 +6,48 @@ import RatingStars from './RatingStars';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectWishlist, addToWishlist, removeFromWishlist } from '../../redux/slices/wishlistSlice';
+import { selectFavorites, addFavorite, removeFavorite } from '../../redux/slices/favoritesSlice';
+import { addToCart, selectCart } from '../../redux/slices/cartSlice';
+import { useTranslation } from '../../i18n/i18n';
+import { showToast } from '../common/Toast';
 
-const CourseCard = ({ course, horizontal = false, style }) => {
+// onPress/onToggleWishlist/onAddToCart allow consumers to override default behavior
+const CourseCard = ({ course, horizontal = false, style, onPress, onToggleWishlist, onAddToCart }) => {
     const { theme } = useTheme();
     const navigation = useNavigation();
     const dispatch = useDispatch();
+    const { t } = useTranslation();
     const wishlist = useSelector(selectWishlist);
+    const favorites = useSelector(selectFavorites);
+    const cartItems = useSelector(selectCart);
     const inWishlist = wishlist.includes(String(course?.id));
+    const inFavorites = favorites.includes(String(course?.id));
+    const inCart = cartItems.includes(String(course?.id));
 
-    const handlePress = () => {
+    const handlePress = useCallback(() => {
+        if (typeof onPress === 'function') return onPress();
         navigation.navigate('CourseDetail', { courseId: course.id });
-    };
+    }, [navigation, course?.id, onPress]);
 
-    const handleFavorite = () => {
+    const handleFavorite = useCallback(() => {
+        if (typeof onToggleWishlist === 'function') return onToggleWishlist();
         if (!course?.id) return;
-        if (inWishlist) dispatch(removeFromWishlist(course.id));
-        else dispatch(addToWishlist(course.id));
-    };
+        if (inWishlist) { dispatch(removeFromWishlist(course.id)); showToast(t('toast.removedFromWishlist','Removed from wishlist')); }
+        else { dispatch(addToWishlist(course.id)); showToast(t('toast.addedToWishlist','Added to wishlist')); }
+    }, [onToggleWishlist, course?.id, inWishlist, dispatch]);
 
-    const handleAddToCart = () => {
-        // TODO: Implement add to cart
-    };
+    const handleAddToCart = useCallback(() => {
+        if (typeof onAddToCart === 'function') return onAddToCart();
+        if (!course?.id) return;
+        dispatch(addToCart(course.id));
+        showToast(t('toast.addedToCart','Added to cart'));
+    }, [onAddToCart, course?.id, dispatch]);
+
+    const handleToggleFavorite = useCallback(() => {
+        if (!course?.id) return;
+        if (inFavorites) { dispatch(removeFavorite(course.id)); showToast(t('toast.removedFromFavorites','Removed from favorites')); }
+        else { dispatch(addFavorite(course.id)); showToast(t('toast.addedToFavorites','Added to favorites')); }
+    }, [course?.id, inFavorites, dispatch]);
 
     return (
         <Card
@@ -48,13 +69,22 @@ const CourseCard = ({ course, horizontal = false, style }) => {
                     <Text variant="labelMedium" style={[styles.category, { backgroundColor: theme.colors.tertiary + '22', color: theme.colors.tertiary }]}>
                         {course.category || course.level || 'General'}
                     </Text>
-                    <IconButton
-                        icon={inWishlist ? 'heart' : 'heart-outline'}
-                        size={20}
-                        onPress={handleFavorite}
-                        style={styles.favoriteButton}
-                        iconColor={inWishlist ? theme.colors.error : undefined}
-                    />
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <IconButton
+                            icon={inFavorites ? 'star' : 'star-outline'}
+                            size={20}
+                            onPress={(e) => { e?.stopPropagation?.(); handleToggleFavorite(); }}
+                            style={styles.favoriteButton}
+                            iconColor={inFavorites ? theme.colors.warning : undefined}
+                        />
+                        <IconButton
+                            icon={inWishlist ? 'heart' : 'heart-outline'}
+                            size={20}
+                            onPress={(e) => { e?.stopPropagation?.(); handleFavorite(); }}
+                            style={styles.favoriteButton}
+                            iconColor={inWishlist ? theme.colors.error : undefined}
+                        />
+                    </View>
                 </View>
 
                 <Text
@@ -109,13 +139,18 @@ const CourseCard = ({ course, horizontal = false, style }) => {
                     icon="cart"
                     mode="contained"
                     size={20}
-                    onPress={handleAddToCart}
+                    onPress={(e) => { e?.stopPropagation?.(); handleAddToCart(); }}
                     style={[
                         styles.cartButton,
                         { backgroundColor: theme.colors.primary }
                     ]}
                     iconColor={theme.colors.onPrimary}
                 />
+                {inCart && (
+                    <View style={styles.cartBadge}>
+                        <Text style={{ color: theme.colors.onPrimary, fontSize: 10 }}>✓</Text>
+                    </View>
+                )}
             </Card.Content>
         </Card>
     );
@@ -195,6 +230,15 @@ const styles = StyleSheet.create({
         right: 8,
         bottom: 8,
         margin: 0,
+    },
+    cartBadge: {
+        position: 'absolute',
+        right: 8,
+        bottom: 48,
+        backgroundColor: '#43A047',
+        borderRadius: 10,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
     },
 });
 

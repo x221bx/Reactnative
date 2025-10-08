@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+// Removed tabs to unify navigation via Drawer only
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -18,6 +18,7 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import WishlistScreen from '../screens/WishlistScreen.jsx';
 import FavoritesScreen from '../screens/FavoritesScreen.jsx';
+import CartScreen from '../screens/CartScreen.jsx';
 // import AdminNavigator from './AdminNavigator';
 import AboutScreen from '../screens/AboutScreen.jsx';
 import UserDashboardScreen from '../screens/UserDashboardScreen.jsx';
@@ -25,10 +26,12 @@ import CustomDrawerContent from '../components/navigation/CustomDrawerContent.js
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen.jsx';
 import AdminCoursesScreen from '../screens/admin/AdminCoursesScreen.jsx';
 import AdminTeachersScreen from '../screens/admin/AdminTeachersScreen.jsx';
+import AdminDataScreen from '../screens/admin/AdminDataScreen.jsx';
+import AdminTeacherAccountsScreen from '../screens/admin/AdminTeacherAccountsScreen.jsx';
 import TeacherChatScreen from '../screens/TeacherChatScreen.jsx';
+import TeacherInboxScreen from '../screens/TeacherInboxScreen.jsx';
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
 
 function AuthStack() {
@@ -40,36 +43,6 @@ function AuthStack() {
   );
 }
 
-function MainTabs() {
-  const { theme } = useTheme();
-  const { t } = useTranslation();
-
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.outline,
-        },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
-        tabBarLabelStyle: { fontWeight: '700' },
-        tabBarActiveBackgroundColor: theme.colors.surfaceVariant,
-        tabBarIcon: ({ color, size }) => {
-          const map = { HomeTab: 'home', CoursesTab: 'menu-book', TeachersTab: 'people', WishlistTab: 'favorite' };
-          const name = map[route.name] || 'circle';
-          return <MaterialIcons name={name} size={size} color={color} />;
-        },
-      })}
-    >
-      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: t('nav.home') }} />
-      <Tab.Screen name="CoursesTab" component={CoursesScreen} options={{ title: t('nav.courses') }} />
-      <Tab.Screen name="TeachersTab" component={TeachersScreen} options={{ title: t('nav.teachers') }} />
-      <Tab.Screen name="WishlistTab" component={WishlistScreen} options={{ title: t('nav.wishlist') }} />
-    </Tab.Navigator>
-  );
-}
 
 // Simple auth guard wrapper to protect specific screens
 function withAuthGuard(Component) {
@@ -87,6 +60,7 @@ function RootDrawer() {
   const { theme } = useTheme();
   const { lang } = useTranslation();
   const { isAdmin } = useAuth();
+  const { user } = useAuth();
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -99,13 +73,17 @@ function RootDrawer() {
       }}
       drawerPosition={lang === 'ar' ? 'right' : 'left'}
     >
-      <Drawer.Screen name="Home" component={MainTabs} />
+      <Drawer.Screen name="Home" component={HomeScreen} />
       <Drawer.Screen name="Courses" component={CoursesScreen} />
       <Drawer.Screen name="Teachers" component={TeachersScreen} />
       <Drawer.Screen name="Wishlist" component={WishlistScreen} />
+      <Drawer.Screen name="Cart" component={CartScreen} />
       <Drawer.Screen name="CourseDetail" component={CourseDetailScreen} options={{ drawerItemStyle: { display: 'none' } }} />
       <Drawer.Screen name="TeacherDetail" component={TeacherDetailScreen} options={{ drawerItemStyle: { display: 'none' } }} />
-      <Drawer.Screen name="TeacherChat" component={TeacherChatScreen} options={{ drawerItemStyle: { display: 'none' } }} />
+      <Drawer.Screen name="TeacherChat" component={withAuthGuard(TeacherChatScreen)} options={{ drawerItemStyle: { display: 'none' } }} />
+      {user?.role === 'teacher' && (
+        <Drawer.Screen name="Inbox" component={withAuthGuard(TeacherInboxScreen)} />
+      )}
       <Drawer.Screen name="Login" options={{ title: "Login" }}>
         {(props) => (
           <LoginScreen {...props} onHome={() => props.navigation.navigate("Home")} onSuccess={() => props.navigation.navigate("Home")} onSwitch={() => props.navigation.navigate("Register")} />
@@ -126,6 +104,8 @@ function RootDrawer() {
           <Drawer.Screen name="AdminTeachers" component={AdminTeachersScreen} options={{ title: 'Admin • Teachers' }} />
           <Drawer.Screen name="AdminEnrollment" component={require('../screens/admin/AdminEnrollmentScreen.jsx').default} options={{ title: 'Admin • Enrollments' }} />
           <Drawer.Screen name="AddCourse" component={require('../screens/admin/AddCourseScreen.jsx').default} options={{ title: 'Admin • Add Course' }} />
+          <Drawer.Screen name="AdminData" component={AdminDataScreen} options={{ title: 'Admin • Data' }} />
+          <Drawer.Screen name="AdminTeacherAccounts" component={AdminTeacherAccountsScreen} options={{ title: 'Admin • Teacher Accounts' }} />
         </>
       )}
     </Drawer.Navigator>

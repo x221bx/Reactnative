@@ -1,223 +1,121 @@
-import { db } from '../config/firebase';
-import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { nowISO } from '../../utils/date';
 import { courses as mockCourses } from '../mock/courses-data';
 import { teachers as mockTeachers } from '../mock/teachers-data';
 
-// Use this flag to switch between Firebase and mock data
-// Default to true for local development unless explicitly set to 'false'
-const USE_MOCK_DATA = (process.env.EXPO_PUBLIC_USE_MOCK_DATA ?? 'true') === 'true';
+// Local storage key
+const STORAGE_KEY = '@courses_db';
 
-const COLLECTION_NAME = 'courses';
+// --- helpers ---------------------------------------------------------------
 
-// Normalize mock course shape to match UI expectations
-function normalizeCourse(course) {
-    const teacher = mockTeachers.find((t) => t.id === course.teacherId);
-    return {
-        ...course,
-        thumbnail: course.thumbnail || course.image,
-        level: course.level || (typeof course.price === 'number'
-            ? (course.price < 50 ? 'Beginner' : course.price < 100 ? 'Intermediate' : 'Advanced')
-            : 'Beginner'),
-        instructor: teacher
-            ? { name: teacher.name, avatar: teacher.image }
-            : { name: 'Unknown', avatar: 'https://picsum.photos/seed/placeholder/40/40' },
-    };
+function pickLevel(course) {
+  if (course.level) return course.level;
+  if (typeof course.price !== 'number') return 'Beginner';
+  if (course.price < 50) return 'Beginner';
+  if (course.price < 100) return 'Intermediate';
+  return 'Advanced';
 }
 
-export const coursesApi = {
-    async getAll(filters = {}) {
-        if (USE_MOCK_DATA) {
-            let filteredCourses = [...mockCourses];
+function normalizeCourse(course) {
+  const teacher = mockTeachers.find((t) => t.id === course.teacherId);
+  return {
+    ...course,
+    thumbnail: course.thumbnail || course.image,
+    level: pickLevel(course),
+    instructor: teacher
+      ? { name: teacher.name, avatar: teacher.image }
+      : { name: 'Unknown', avatar: 'https://picsum.photos/seed/placeholder/40/40' },
+  };
+}
 
-            if (filters.search) {
-                const searchLower = filters.search.toLowerCase();
-                filteredCourses = filteredCourses.filter(course =>
-                    course.title.toLowerCase().includes(searchLower) ||
-                    course.description.toLowerCase().includes(searchLower)
-                );
-            }
+function filterCourses(list, filters = {}) {
+  const { search, teacherId, level } = filters;
+  let out = [...list];
 
-            if (filters.teacherId) {
-                filteredCourses = filteredCourses.filter(course =>
-                    course.teacherId === filters.teacherId
-                );
-            }
+  if (search) {
+    const q = String(search).toLowerCase();
+    out = out.filter((c) =>
+      String(c.title || '').toLowerCase().includes(q) ||
+      String(c.description || '').toLowerCase().includes(q)
+    );
+  }
 
-            if (filters.level) {
-                filteredCourses = filteredCourses.filter(course => course.level === filters.level);
-            }
+  if (teacherId) {
+    out = out.filter((c) => c.teacherId === teacherId);
+  }
 
-            return filteredCourses.map(normalizeCourse);
-        }
+  if (level) {
+    out = out.filter((c) => String(c.level || pickLevel(c)) === String(level));
+  }
 
-        try {
-            let coursesQuery = collection(db, COLLECTION_NAME);
+  return out;
+}
 
-            // Apply filters
-            if (filters.teacherId) {
-                coursesQuery = query(coursesQuery, where('teacherId', '==', filters.teacherId));
-            }
-            if (filters.level) {
-                coursesQuery = query(coursesQuery, where('level', '==', filters.level));
-            }
-
-            const querySnapshot = await getDocs(coursesQuery);
-            const courses = [];
-
-            querySnapshot.forEach((doc) => {
-                courses.push({ id: doc.id, ...doc.data() });
-            });
-
-            // Handle search filter client-side for Firestore
-            let result = courses;
-            if (filters.search) {
-                const searchLower = filters.search.toLowerCase();
-                result = result.filter(course =>
-                    (course.title || '').toLowerCase().includes(searchLower) ||
-                    (course.description || '').toLowerCase().includes(searchLower)
-                );
-            }
-
-            // Dev-friendly fallback: if collection empty, use mock
-            if (!result.length) {
-                let filteredCourses = [...mockCourses];
-                if (filters.search) {
-                    const searchLower = filters.search.toLowerCase();
-                    filteredCourses = filteredCourses.filter(course =>
-                        (course.title || '').toLowerCase().includes(searchLower) ||
-                        (course.description || '').toLowerCase().includes(searchLower)
-                    );
-                }
-                if (filters.teacherId) {
-                    filteredCourses = filteredCourses.filter(course => course.teacherId === filters.teacherId);
-                }
-                if (filters.level) {
-                    filteredCourses = filteredCourses.filter(course => course.level === filters.level);
-                }
-                return filteredCourses.map(normalizeCourse);
-            }
-
-            return result;
-        } catch (error) {
-            console.error('Error fetching courses, falling back to mock data:', error);
-            // Fallback to mock data gracefully
-            let filteredCourses = [...mockCourses];
-            if (filters.search) {
-                const searchLower = filters.search.toLowerCase();
-                filteredCourses = filteredCourses.filter(course =>
-                    course.title.toLowerCase().includes(searchLower) ||
-                    course.description.toLowerCase().includes(searchLower)
-                );
-            }
-            if (filters.teacherId) {
-                filteredCourses = filteredCourses.filter(course => course.teacherId === filters.teacherId);
-            }
-            if (filters.level) {
-                filteredCourses = filteredCourses.filter(course => course.level === filters.level);
-            }
-            return filteredCourses.map(normalizeCourse);
-        }
-    },
-
-    async getById(id) {
-        if (USE_MOCK_DATA) {
-            const course = mockCourses.find(c => c.id === id);
-            if (!course) throw new Error('Course not found');
-            return normalizeCourse(course);
-        }
-
-        try {
-            const docRef = doc(db, COLLECTION_NAME, id);
-            const docSnap = await getDoc(docRef);
-
-            if (!docSnap.exists()) {
-                throw new Error('Course not found');
-            }
-
-            return { id: docSnap.id, ...docSnap.data() };
-        } catch (error) {
-            console.error('Error fetching course:', error);
-            throw error;
-        }
-    },
-
-    async create(courseData) {
-        if (USE_MOCK_DATA) {
-            const newCourse = {
-                id: Date.now().toString(),
-                ...courseData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            mockCourses.push(newCourse);
-            return normalizeCourse(newCourse);
-        }
-
-        try {
-            const docRef = await addDoc(collection(db, COLLECTION_NAME), {
-                ...courseData,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-
-            return {
-                id: docRef.id,
-                ...courseData
-            };
-        } catch (error) {
-            console.error('Error creating course:', error);
-            throw error;
-        }
-    },
-
-    async update(id, courseData) {
-        if (USE_MOCK_DATA) {
-            const index = mockCourses.findIndex(c => c.id === id);
-            if (index === -1) throw new Error('Course not found');
-
-            mockCourses[index] = {
-                ...mockCourses[index],
-                ...courseData,
-                updatedAt: new Date().toISOString()
-            };
-
-            return normalizeCourse(mockCourses[index]);
-        }
-
-        try {
-            const docRef = doc(db, COLLECTION_NAME, id);
-            await updateDoc(docRef, {
-                ...courseData,
-                updatedAt: new Date()
-            });
-
-            return {
-                id,
-                ...courseData
-            };
-        } catch (error) {
-            console.error('Error updating course:', error);
-            throw error;
-        }
-    },
-
-    async delete(id) {
-        if (USE_MOCK_DATA) {
-            const index = mockCourses.findIndex(c => c.id === id);
-            if (index === -1) throw new Error('Course not found');
-            mockCourses.splice(index, 1);
-            return true;
-        }
-
-        try {
-            const docRef = doc(db, COLLECTION_NAME, id);
-            await deleteDoc(docRef);
-            return true;
-        } catch (error) {
-            console.error('Error deleting course:', error);
-            throw error;
-        }
+async function readAll() {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // seed from mock on first run
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockCourses));
+      return [...mockCourses];
     }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [...mockCourses];
+  }
+}
+
+async function writeAll(list) {
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+// --- api ------------------------------------------------------------------
+
+export const coursesApi = {
+  /** Get all courses with optional filters (mock or Firestore). */
+  async getAll(filters = {}) {
+    const list = await readAll();
+    return filterCourses(list, filters).map(normalizeCourse);
+  },
+
+  /** Get a single course by id. */
+  async getById(id) {
+    const list = await readAll();
+    const c = list.find((x) => x.id === id);
+    if (!c) throw new Error('Course not found');
+    return normalizeCourse(c);
+  },
+
+  /** Create a new course. */
+  async create(courseData) {
+    const now = nowISO();
+    const list = await readAll();
+    const newCourse = { id: Date.now().toString(), ...courseData, createdAt: now, updatedAt: now };
+    list.push(newCourse);
+    await writeAll(list);
+    return normalizeCourse(newCourse);
+  },
+
+  /** Update an existing course. */
+  async update(id, courseData) {
+    const list = await readAll();
+    const idx = list.findIndex((c) => c.id === id);
+    if (idx === -1) throw new Error('Course not found');
+    list[idx] = { ...list[idx], ...courseData, updatedAt: nowISO() };
+    await writeAll(list);
+    return normalizeCourse(list[idx]);
+  },
+
+  /** Delete a course by id. */
+  async delete(id) {
+    const list = await readAll();
+    const idx = list.findIndex((c) => c.id === id);
+    if (idx === -1) throw new Error('Course not found');
+    list.splice(idx, 1);
+    await writeAll(list);
+    return true;
+  },
 };
 
 export default coursesApi;

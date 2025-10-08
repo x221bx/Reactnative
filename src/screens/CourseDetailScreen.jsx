@@ -14,6 +14,11 @@ import { useTheme } from "../hooks/useTheme";
 import AppHeader from "../components/ui/AppHeader";
 import Breadcrumbs from "../components/ui/Breadcrumbs";
 import { useTranslation } from "../i18n/i18n";
+import { formatDateTime } from '../utils/date';
+import { useDispatch as useReduxDispatch } from 'react-redux';
+import { addToCart } from '../redux/slices/cartSlice';
+import { showToast } from '../components/common/Toast';
+ 
 
 export default function CourseDetailScreen({ courseId: propCourseId, onBack, onHome, onLogin }) {
   const { colors } = useTheme();
@@ -23,8 +28,9 @@ export default function CourseDetailScreen({ courseId: propCourseId, onBack, onH
   const route = useRoute();
   const courseId = propCourseId || route?.params?.courseId;
   const { user } = useAuth();
-  const { t } = useTranslation();
   const dispatch = useDispatch();
+  const rdispatch = useReduxDispatch();
+  
   const enrolledIds = useSelector((s) => selectEnrollmentsByUser(s, user?.uid));
   const enrolledCount = useSelector((s) => selectEnrolledCountForCourse(s, courseId));
   const ratingAvg = useSelector((s) => selectCourseRatingAvg(s, courseId));
@@ -82,6 +88,11 @@ export default function CourseDetailScreen({ courseId: propCourseId, onBack, onH
       <Text style={[styles.meta, { color: colors.muted }]}>Rating: {Number(ratingAvg || 0).toFixed(1)}{ratingCount ? ` (${ratingCount})` : ''}</Text>
       <Text style={[styles.meta, { color: colors.muted }]}>Enrolled: {enrolledCount}</Text>
       {typeof course.price === 'number' && <Text style={[styles.price, { color: colors.text }]}>${Number(course.price || 0).toFixed(2)}</Text>}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 8 }}>
+        <TouchableOpacity onPress={() => { rdispatch(addToCart(course.id)); showToast(t('toast.addedToCart','Added to cart')); }} style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.primary }}>
+          <Text style={{ color: colors.onPrimary, fontWeight: '700' }}>Add to Cart</Text>
+        </TouchableOpacity>
+      </View>
       {!!teacher && (
         <Pressable onPress={() => navigation.navigate('TeacherDetail', { teacherId: teacher.id })} accessibilityRole="button" style={{ alignSelf: 'center' }}>
           <Text style={[styles.meta, { color: colors.muted, marginTop: 8 }]}>By {teacher.name} • View profile</Text>
@@ -150,7 +161,7 @@ export default function CourseDetailScreen({ courseId: propCourseId, onBack, onH
         <View key={idx} style={{ marginTop: 8, borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 10 }}>
           <Text style={{ color: colors.text, fontWeight: '700' }}>★ {Number(r.rating || 0).toFixed(1)}</Text>
           {!!r.comment && <Text style={{ color: colors.text, marginTop: 4 }}>{r.comment}</Text>}
-          <Text style={{ color: colors.muted, marginTop: 4 }}>{new Date(r.createdAt || Date.now()).toLocaleString()}</Text>
+          <Text style={{ color: colors.muted, marginTop: 4 }}>{formatDateTime(r.createdAt || Date.now())}</Text>
         </View>
       ))}
       <View style={{ flexDirection: 'row', justifyContent: 'center' }}>

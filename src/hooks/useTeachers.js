@@ -47,6 +47,7 @@ export default function useTeachers(filters = {}) {
     getTeacherById,
     updateFilters,
     resetFilters,
+    reload: () => dispatch(fetchTeachers(currentFilters)),
     // Admin helpers
     addTeacher: async (teacherData) => {
       const created = await teachersApi.create(teacherData);

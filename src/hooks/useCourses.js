@@ -54,6 +54,10 @@ export default function useCourses(filters = {}) {
     return updated;
   };
 
+  const reload = () => {
+    dispatch(fetchCourses(currentFilters));
+  };
+
   const removeCourse = async (id) => {
     await coursesApi.delete(id);
     dispatch(fetchCourses(currentFilters));
@@ -68,6 +72,7 @@ export default function useCourses(filters = {}) {
     getCourseById,
     updateFilters,
     resetFilters,
+    reload,
     addCourse,
     updateCourse,
     removeCourse

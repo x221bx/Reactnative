@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { app } from '../config/firebase';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 
-const auth = getAuth(app);
+// Local-storage based auth (no Firebase)
+const USERS_KEY = '@users_db';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -29,69 +28,99 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const login = useCallback(async (email, password) => {
+    const loadUsers = async () => {
         try {
-            setError(null);
-            const result = await signInWithEmailAndPassword(auth, email, password);
-            // try restore role from storage, else infer by email
-            const stored = await AsyncStorage.getItem('auth_user');
-            const storedRole = stored ? (JSON.parse(stored).role || null) : null;
-            const role = storedRole || (email?.endsWith?.('@admin.com') ? 'admin' : 'student');
-            const userData = {
-                uid: result.user.uid,
-                email: result.user.email,
-                displayName: result.user.displayName,
-                photoURL: result.user.photoURL,
-                role,
-            };
-            setUser(userData);
-            await AsyncStorage.setItem('auth_user', JSON.stringify(userData));
-            return userData;
-        } catch (error) {
-            setError(error?.message || 'Login failed');
-            throw new Error(error.message);
+            const raw = await AsyncStorage.getItem(USERS_KEY);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+            return [];
         }
+    };
+
+    const saveUsers = async (users) => {
+        await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
+    };
+
+    const login = useCallback(async (email, password) => {
+        setError(null);
+        const users = await loadUsers();
+        const found = users.find((u) => u.email === email && u.password === password);
+        if (!found) {
+            const err = new Error('Invalid email or password');
+            setError(err.message);
+            throw err;
+        }
+        const userData = {
+            id: found.id,
+            uid: found.id, // compatibility
+            email: found.email,
+            displayName: found.name || null,
+            photoURL: found.photoURL || null,
+            dob: found.dob || null,
+            address: found.address || null,
+            teacherId: found.teacherId || null,
+            role: found.role || (email?.endsWith?.('@admin.com') ? 'admin' : 'student'),
+        };
+        setUser(userData);
+        await AsyncStorage.setItem('auth_user', JSON.stringify(userData));
+        return userData;
     }, []);
 
-    const register = useCallback(async (email, password, role = 'student') => {
-        try {
-            setError(null);
-            const result = await createUserWithEmailAndPassword(auth, email, password);
-            const userData = {
-                uid: result.user.uid,
-                email: result.user.email,
-                displayName: result.user.displayName,
-                photoURL: result.user.photoURL,
-                role,
-            };
-            setUser(userData);
-            await AsyncStorage.setItem('auth_user', JSON.stringify(userData));
-            return userData;
-        } catch (error) {
-            setError(error?.message || 'Registration failed');
-            throw new Error(error.message);
+    const register = useCallback(async (email, password, role = 'student', extra = {}) => {
+        setError(null);
+        const users = await loadUsers();
+        const exists = users.some((u) => u.email === email);
+        if (exists) {
+            const err = new Error('Email already registered');
+            setError(err.message);
+            throw err;
         }
+        const resolvedRole = (email?.endsWith?.('@admin.com') ? 'admin' : (role || 'student'));
+        const newUser = {
+            id: Date.now().toString(),
+            email,
+            password,
+            role: resolvedRole,
+            name: extra.name || null,
+            address: extra.address || null,
+            dob: extra.dob || null,
+            phone: extra.phone || null,
+            photoURL: extra.photoURL || null,
+        };
+        users.push(newUser);
+        await saveUsers(users);
+        const userData = {
+            id: newUser.id,
+            uid: newUser.id, // compatibility
+            email: newUser.email,
+            displayName: newUser.name,
+            dob: newUser.dob,
+            address: newUser.address,
+            role: newUser.role,
+            teacherId: newUser.teacherId || null,
+            photoURL: newUser.photoURL || null,
+        };
+        setUser(userData);
+        await AsyncStorage.setItem('auth_user', JSON.stringify(userData));
+        return userData;
     }, []);
 
     const logout = useCallback(async () => {
-        try {
-            await signOut(auth);
-            setUser(null);
-            await AsyncStorage.removeItem('auth_user');
-        } catch (error) {
-            throw new Error(error.message);
-        }
+        setUser(null);
+        await AsyncStorage.removeItem('auth_user');
     }, []);
 
     const clearError = useCallback(() => setError(null), []);
 
     const value = useMemo(
-        () => ({ user, loading, error, clearError, login, register, logout, isAdmin: (user?.role === 'admin') || (user?.email?.endsWith?.('@admin.com')) }),
+        () => ({ user, loading, error, clearError, login, register, logout, isAdmin: (user?.role === 'admin') }),
         [user, loading, error, clearError, login, register, logout]
     );
 
     if (loading) {
-        return null; // Or a loading spinner
+        return null;
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -104,3 +133,4 @@ export function useAuth() {
     }
     return context;
 }
+

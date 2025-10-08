@@ -19,11 +19,14 @@ export default function Button({
 }) {
     const { colors } = useTheme();
 
+    const isOutline = variant === 'outline';
     const buttonStyles = [
         styles.button,
         styles[size],
         {
-            backgroundColor: disabled ? colors.disabled : colors[variant],
+            backgroundColor: disabled ? colors.disabled : (isOutline ? 'transparent' : (colors[variant] || colors.primary)),
+            borderWidth: isOutline ? 1 : 0,
+            borderColor: isOutline ? colors.primary : 'transparent',
             opacity: disabled ? 0.7 : 1,
         },
         style
@@ -31,7 +34,7 @@ export default function Button({
 
     const textStyles = [
         styles.text,
-        { color: variant === 'outline' ? colors.primary : colors.buttonText },
+        { color: isOutline ? colors.primary : colors.buttonText },
         textStyle
     ];
 

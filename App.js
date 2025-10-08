@@ -19,6 +19,7 @@ import { useTheme } from './src/theme/ThemeContext';
 
 // Navigation
 import AppNavigator from './src/navigation/AppNavigator.jsx';
+import ToastHost from './src/components/common/Toast';
 
 // Error Boundary
 import ErrorBoundary from './src/components/common/ErrorBoundary';
@@ -60,6 +61,7 @@ export default function App() {
                   <I18nProvider>
                     <AuthProvider>
                       <AppNavigator />
+                      <ToastHost />
                       <StatusBar style="auto" />
                     </AuthProvider>
                   </I18nProvider>

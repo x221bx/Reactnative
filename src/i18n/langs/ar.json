@@ -60,5 +60,16 @@
     "guest.prompt":  "سجّل دخولك للمتابعة",
     "nav.admin":  "الإدارة",
     "nav.adminCourses":  "دورات الإدارة",
-    "nav.adminTeachers":  "مدرسو الإدارة"
+    "nav.adminTeachers":  "مدرسو الإدارة",
+    "common.viewAll": "عرض الكل",
+    "toast.addedToCart": "تمت الإضافة للسلة",
+    "toast.addedToWishlist": "تمت الإضافة لقائمة الرغبات",
+    "toast.removedFromWishlist": "تمت الإزالة من قائمة الرغبات",
+    "toast.addedToFavorites": "تمت الإضافة للمفضلة",
+    "toast.removedFromFavorites": "تمت الإزالة من المفضلة",
+    "courses.resultsCount": "{{count}} نتيجة",
+    "courses.sort.title": "ترتيب",
+    "action.cancel": "إلغاء",
+    "action.apply": "تطبيق",
+    "teachers.results": "{{count}} نتيجة"
 }

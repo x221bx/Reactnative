@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, FlatList, Text, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import AppHeader from '../components/ui/AppHeader';
 import { useTheme } from '../hooks/useTheme';
 import List from '../components/ui/List';
@@ -14,6 +15,7 @@ import useCourses from '../hooks/useCourses';
 export default function WishlistScreen({ onHome }) {
   const { colors } = useTheme();
   const { courses } = useCourses();
+  const navigation = useNavigation();
   const ids = useSelector(selectWishlist);
   const dispatch = useDispatch();
   const items = useMemo(() => courses.filter(c => ids.includes(String(c.id))), [ids, courses]);
@@ -43,7 +45,14 @@ export default function WishlistScreen({ onHome }) {
               </List.Item>
             </List>
           )}
-          ListEmptyComponent={<List.Empty>No items</List.Empty>}
+          ListEmptyComponent={(
+            <View style={{ alignItems: 'center', padding: 24 }}>
+              <Text style={{ color: colors.muted, marginBottom: 8 }}>No items</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Courses')} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border }}>
+                <Text style={{ color: colors.text }}>Browse courses</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           contentContainerStyle={{ paddingBottom: 24 }}
         />
         <Pagination page={page} count={pageCount} onChange={(p) => setPage(p)} />

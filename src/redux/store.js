@@ -9,6 +9,7 @@ import wishlist from "./slices/wishlistSlice";
 import favorites from "./slices/favoritesSlice";
 import enrollment from "./slices/enrollmentSlice";
 import ratings from "./slices/ratingsSlice";
+import cart from "./slices/cartSlice";
 
 const rootReducer = combineReducers({
   teachers,
@@ -18,12 +19,13 @@ const rootReducer = combineReducers({
   favorites,
   enrollment,
   ratings,
+  cart,
 });
 
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  whitelist: ['teachers', 'courses', 'auth', 'wishlist', 'favorites', 'enrollment']
+  whitelist: ['teachers', 'courses', 'auth', 'wishlist', 'favorites', 'enrollment', 'cart']
 };
 
 const persisted = persistReducer(persistConfig, rootReducer);

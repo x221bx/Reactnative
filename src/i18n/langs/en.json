@@ -61,5 +61,15 @@
     "nav.admin":  "Admin",
     "nav.adminCourses":  "Admin Courses",
     "nav.adminTeachers":  "Admin Teachers",
-    "common.viewAll":  "View All"
+    "common.viewAll":  "View All",
+    "toast.addedToCart": "Added to cart",
+    "toast.addedToWishlist": "Added to wishlist",
+    "toast.removedFromWishlist": "Removed from wishlist",
+    "toast.addedToFavorites": "Added to favorites",
+    "toast.removedFromFavorites": "Removed from favorites",
+    "courses.resultsCount": "{{count}} results",
+    "courses.sort.title": "Sort",
+    "action.cancel": "Cancel",
+    "action.apply": "Apply",
+    "teachers.results": "{{count}} results"
 }

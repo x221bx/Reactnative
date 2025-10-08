@@ -40,10 +40,16 @@ export function ThemeProvider({ children }) {
   const base = mode === 'dark' ? darkPalette : lightPalette;
   const colors = {
     ...base,
+    // aliases for simplicity across app
     bg: base.background,
     text: base.onSurface,
     muted: base.onSurfaceVariant,
     border: base.outline,
+    card: base.surface,
+    inputBackground: base.surfaceVariant,
+    placeholder: base.onSurfaceVariant,
+    overlay: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)',
+    buttonText: base.onPrimary,
   };
   const toggle = () => setMode((m) => (m === 'dark' ? 'light' : 'dark'));
 

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import useTeachers from "../hooks/useTeachers";
 import useCourses from "../hooks/useCourses";
 import { useTheme } from "../hooks/useTheme";
@@ -13,8 +13,10 @@ export default function TeacherDetailScreen({ teacherId, onBack, onHome }) {
   const { teachers } = useTeachers();
   const { courses } = useCourses();
   const navigation = useNavigation();
+  const route = useRoute();
+  const paramId = teacherId || route?.params?.teacherId;
   const { t } = useTranslation();
-  const teacher = useMemo(() => teachers.find((t) => String(t.id) === String(teacherId)), [teachers, teacherId]);
+  const teacher = useMemo(() => teachers.find((t) => String(t.id) === String(paramId)), [teachers, paramId]);
   const teacherCourses = useMemo(
     () => courses.filter((c) => String(c.teacherId) === String(teacher?.id)),
     [courses, teacher]

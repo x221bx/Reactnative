@@ -13,7 +13,7 @@ const slice = createSlice({
       const uid = String(userId);
       const list = state.ratingsByCourse[cid] || [];
       const idx = list.findIndex(r => String(r.userId) === uid);
-      const entry = { userId: uid, rating: Math.max(1, Math.min(5, Number(rating) || 0)), comment: comment || '', createdAt: Date.now() };
+      const entry = { userId: uid, rating: Math.max(1, Math.min(5, Number(rating) || 0)), comment: comment || '', createdAt: (new Date()).toISOString() };
       if (idx >= 0) list[idx] = { ...list[idx], ...entry };
       else list.push(entry);
       state.ratingsByCourse[cid] = list;
@@ -41,4 +41,3 @@ export const selectCourseRatingAvg = createSelector([
 export const selectCourseRatingCount = (s, id) => selectCourseRatings(s, id).length;
 
 export default slice.reducer;
-

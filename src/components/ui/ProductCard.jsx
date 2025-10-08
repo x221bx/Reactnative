@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Image as RNImage } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import { Image as ExpoImage } from 'expo-image';
 import { useTheme } from '../../hooks/useTheme';
 
 export default function ProductCard({ image, title, subtitle, price, rating, instructor, lessonsCount, onPress }) {
@@ -9,12 +9,11 @@ export default function ProductCard({ image, title, subtitle, price, rating, ins
   return (
     <TouchableOpacity accessibilityRole="button" accessibilityLabel={title} onPress={onPress} style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}> 
       {!!image && (
-        <Image
-          source={{ uri: image }}
-          style={styles.image}
-          contentFit="cover"
-          transition={200}
-        />
+        Platform.OS === 'web' ? (
+          <RNImage source={{ uri: image }} style={styles.image} />
+        ) : (
+          <ExpoImage source={{ uri: image }} style={styles.image} contentFit="cover" transition={200} />
+        )
       )}
       {!!title && <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>{title}</Text>}
       <View style={styles.row}>

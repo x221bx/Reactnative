@@ -87,21 +87,25 @@ const FiltersBottomSheet = ({
                         Category
                     </Text>
                     <View style={styles.categories}>
-                        {CATEGORIES.map((category) => (
-                            <Chip
-                                key={category}
-                                mode="outlined"
-                                selected={
-                                    category === 'All'
-                                        ? !filters.category
-                                        : filters.category === category
-                                }
-                                onPress={() => handleCategoryPress(category)}
-                                style={styles.chip}
-                            >
-                                {category}
-                            </Chip>
-                        ))}
+                        {CATEGORIES.map((category) => {
+                            const selected = category === 'All' ? !filters.category : filters.category === category;
+                            return (
+                                <Chip
+                                    key={category}
+                                    mode="outlined"
+                                    selected={selected}
+                                    onPress={() => handleCategoryPress(category)}
+                                    style={[
+                                        styles.chip,
+                                        selected && { backgroundColor: colors.primary + '22', borderColor: colors.primary },
+                                    ]}
+                                    selectedColor={colors.primary}
+                                    textStyle={selected ? { color: colors.primary } : null}
+                                >
+                                    {category}
+                                </Chip>
+                            );
+                        })}
                     </View>
                 </View>
 
@@ -110,17 +114,22 @@ const FiltersBottomSheet = ({
                         Rating
                     </Text>
                     <View style={styles.ratings}>
-                        {RATINGS.map(({ value, label }) => (
-                            <Chip
-                                key={value}
-                                mode="outlined"
-                                selected={filters.minRating === value}
-                                onPress={() => handleRatingPress(value)}
-                                style={styles.chip}
-                            >
-                                {label}
-                            </Chip>
-                        ))}
+                        {RATINGS.map(({ value, label }) => {
+                            const selected = filters.minRating === value;
+                            return (
+                                <Chip
+                                    key={value}
+                                    mode="outlined"
+                                    selected={selected}
+                                    onPress={() => handleRatingPress(value)}
+                                    style={[styles.chip, selected && { backgroundColor: colors.primary + '22', borderColor: colors.primary }]}
+                                    selectedColor={colors.primary}
+                                    textStyle={selected ? { color: colors.primary } : null}
+                                >
+                                    {label}
+                                </Chip>
+                            );
+                        })}
                     </View>
                 </View>
 
@@ -129,17 +138,22 @@ const FiltersBottomSheet = ({
                         Level
                     </Text>
                     <View style={styles.ratings}>
-                        {LEVELS.map((lvl) => (
-                            <Chip
-                                key={lvl}
-                                mode="outlined"
-                                selected={filters.level === lvl}
-                                onPress={() => handleLevelPress(lvl)}
-                                style={styles.chip}
-                            >
-                                {lvl}
-                            </Chip>
-                        ))}
+                        {LEVELS.map((lvl) => {
+                            const selected = filters.level === lvl;
+                            return (
+                                <Chip
+                                    key={lvl}
+                                    mode="outlined"
+                                    selected={selected}
+                                    onPress={() => handleLevelPress(lvl)}
+                                    style={[styles.chip, selected && { backgroundColor: colors.primary + '22', borderColor: colors.primary }]}
+                                    selectedColor={colors.primary}
+                                    textStyle={selected ? { color: colors.primary } : null}
+                                >
+                                    {lvl}
+                                </Chip>
+                            );
+                        })}
                     </View>
                 </View>
 

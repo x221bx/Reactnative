@@ -1,107 +1,245 @@
-﻿import React, { useState } from 'react';
-import { View, Text, ScrollView, Image } from 'react-native';
-import { SegmentedButtons } from 'react-native-paper';
-import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState } from 'react';
+import { View, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { Modal, Text, Button } from 'react-native-paper';
 import AppHeader from '../../components/ui/AppHeader';
 import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../../hooks/useTheme';
-import Input from '../../components/form/Input';
-import Button from '../../components/form/Button';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import useAuth from '../../hooks/useAuth';
+import CalendarPicker from '../../components/ui/CalendarPicker';
+import { formatDate } from '../../utils/date';
 
 export default function RegisterScreen({ onSuccess, onSwitch, onHome }) {
-  const { colors } = useTheme();
   const { register, error, clearError } = useAuth();
   const navigation = useNavigation();
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'student',
-    profileImage: null
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [dob, setDob] = useState(''); // YYYY-MM-DD
+  const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [dobPickerVisible, setDobPickerVisible] = useState(false);
+
+  const [errors, setErrors] = useState({
+    namerr: '',
+    emailerr: '',
+    passerr: '',
+    phone_err: '',
+    addr_err: '',
+    dob_err: '',
   });
-  const [errs, setErrs] = useState({});
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+  const validate = () => {
+    let valid = true;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phonePattern = /^\d+$/;
+    const dobPattern = /^\d{4}-\d{2}-\d{2}$/; // simple YYYY-MM-DD
 
-    if (!result.canceled) {
-      const imageUri = result.assets[0].uri;
-      setForm(prev => ({ ...prev, profileImage: imageUri }));
+    const newErrors = { namerr: '', emailerr: '', passerr: '', phone_err: '', addr_err: '', dob_err: '' };
 
-      try {
-        await AsyncStorage.setItem(`@profile_image_${form.email}`, imageUri);
-      } catch (e) {
-        console.error('Error saving profile image:', e);
-      }
-    }
+    if (name.length === 0) { newErrors.namerr = 'name is required'; valid = false; }
+    else if (name.length <= 2) { newErrors.namerr = 'name must be more than two characters'; valid = false; }
+
+    if (email.length === 0) { newErrors.emailerr = 'email is required'; valid = false; }
+    else if (!emailPattern.test(email)) { newErrors.emailerr = 'email is not valid'; valid = false; }
+
+    if (password.length === 0) { newErrors.passerr = 'password is required'; valid = false; }
+    else if (password.length < 8) { newErrors.passerr = 'password must be at least 8 characters'; valid = false; }
+
+    if (phone.length === 0) { newErrors.phone_err = 'phone number is required'; valid = false; }
+    else if (phone.length !== 11) { newErrors.phone_err = 'phone number must be 11 digits'; valid = false; }
+    else if (!phonePattern.test(phone)) { newErrors.phone_err = 'phone number must be numeric only'; valid = false; }
+
+    if (address.length === 0) { newErrors.addr_err = 'address is required'; valid = false; }
+
+    if (dob.length === 0) { newErrors.dob_err = 'date of birth is required'; valid = false; }
+    else if (!dobPattern.test(dob)) { newErrors.dob_err = 'date of birth must be YYYY-MM-DD'; valid = false; }
+
+    setErrors(newErrors);
+    return valid;
   };
 
   const submit = async () => {
-    const e = {};
-    if (!form.name || form.name.length < 2) e.name = 'Name is required';
-    if (!form.email) e.email = 'Email is required';
-    if (!form.password || form.password.length < 6) e.password = 'Password must be at least 6 chars';
-    setErrs(e);
-    if (Object.keys(e).length) return;
+    if (!validate()) return;
     clearError();
     try {
-      await register(form.email, form.password, form.role);
-      onSuccess?.();
-    } catch (err) {
-      // error state is set in context; UI below will show it
+      // Persist name/phone for later use by AuthContext/profile
+      await AsyncStorage.setItem(`@profile_name_${email}`, name);
+      await AsyncStorage.setItem(`@profile_phone_${email}`, phone);
+      await AsyncStorage.setItem(`@profile_address_${email}`, address);
+      await AsyncStorage.setItem(`@profile_dob_${email}`, dob);
+      await register(email, password, 'student', { name, phone, address, dob });
+      setModalVisible(true);
+    } catch (_) {
+      // error handled by context
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={styles.container}>
       <AppHeader title="Register" onHome={onHome || (() => navigation.navigate('Home'))} showMenu />
-      <ScrollView style={{ padding: 16 }}>
-        <Button
-          variant="outline"
-          title={form.profileImage ? "Change Profile Picture" : "Upload Profile Picture"}
-          onPress={pickImage}
-        />
 
-        {form.profileImage && (
-          <View style={{ alignItems: 'center', marginVertical: 16 }}>
-            <Image
-              source={{ uri: form.profileImage }}
-              style={{ width: 120, height: 120, borderRadius: 60 }}
+      <View style={styles.box}>
+        <Text style={styles.title}>Registration Form</Text>
+
+        <TextInput
+          placeholder="Enter your name"
+          style={styles.input}
+          value={name}
+          onChangeText={(t) => { setName(t); setErrors((p) => ({ ...p, namerr: '' })); }}
+        />
+        {!!errors.namerr && <Text style={styles.errorText}>{errors.namerr}</Text>}
+
+        <TextInput
+          placeholder="Enter your password"
+          secureTextEntry={!showPass}
+          style={styles.input}
+          value={password}
+          onChangeText={(t) => { setPassword(t); setErrors((p) => ({ ...p, passerr: '' })); }}
+        />
+        {!!errors.passerr && <Text style={styles.errorText}>{errors.passerr}</Text>}
+
+        <TouchableOpacity onPress={() => setShowPass(!showPass)}>
+          <Text style={styles.toggleText}>{showPass ? 'Hide Password' : 'Show Password'}</Text>
+        </TouchableOpacity>
+
+        <TextInput
+          placeholder="Enter your email"
+          keyboardType="email-address"
+          style={styles.input}
+          value={email}
+          onChangeText={(t) => { setEmail(t); setErrors((p) => ({ ...p, emailerr: '' })); }}
+        />
+        {!!errors.emailerr && <Text style={styles.errorText}>{errors.emailerr}</Text>}
+
+        <TextInput
+          placeholder="Enter your address"
+          style={styles.input}
+          value={address}
+          onChangeText={(t) => { setAddress(t); setErrors((p) => ({ ...p, addr_err: '' })); }}
+        />
+        {!!errors.addr_err && <Text style={styles.errorText}>{errors.addr_err}</Text>}
+
+        <TouchableOpacity onPress={() => setDobPickerVisible(true)}>
+          <View pointerEvents="none">
+            <TextInput
+              placeholder="Date of birth (YYYY-MM-DD)"
+              style={styles.input}
+              value={dob}
+              editable={false}
             />
           </View>
-        )}
+        </TouchableOpacity>
+        {!!errors.dob_err && <Text style={styles.errorText}>{errors.dob_err}</Text>}
 
-        <Input label="Name" value={form.name} onChangeText={(v) => setForm((s) => ({ ...s, name: v }))} error={errs.name} />
-        <View style={{ height: 8 }} />
-        <Input label="Email" value={form.email} onChangeText={(v) => setForm((s) => ({ ...s, email: v }))} error={errs.email} />
-        <View style={{ height: 8 }} />
-        <Input label="Password" secureTextEntry value={form.password} onChangeText={(v) => setForm((s) => ({ ...s, password: v }))} error={errs.password} />
-        <View style={{ height: 12 }} />
-        <Text style={{ color: colors.text, marginBottom: 6, fontWeight: '700' }}>Choose Role</Text>
-        <View style={{ flexDirection: 'row' }}>
-          {['student', 'teacher', 'admin'].map((r) => (
-            <View key={r} style={{ marginRight: 8 }}>
-              <Button
-                variant={form.role === r ? 'solid' : 'outline'}
-                title={r.charAt(0).toUpperCase() + r.slice(1)}
-                onPress={() => setForm((s) => ({ ...s, role: r }))}
-              />
-            </View>
-          ))}
-        </View>
-        {!!error && <Text style={{ color: '#e74c3c', marginTop: 8 }}>{error}</Text>}
-        <View style={{ height: 12 }} />
-        <Button title="Create" onPress={submit} />
-        <View style={{ height: 8 }} />
-        <Button variant="outline" title="Back to login" onPress={onSwitch || (() => navigation.navigate('Login'))} />
-      </ScrollView>
+        <CalendarPicker
+          visible={dobPickerVisible}
+          value={dob}
+          onClose={() => setDobPickerVisible(false)}
+          onSelect={(iso) => { const d = formatDate(iso, 'YYYY-MM-DD'); setDob(d); setErrors((p) => ({ ...p, dob_err: '' })); }}
+        />
+
+        <TextInput
+          placeholder="Enter your phone number"
+          keyboardType="numeric"
+          style={styles.input}
+          value={phone}
+          onChangeText={(t) => { setPhone(t); setErrors((p) => ({ ...p, phone_err: '' })); }}
+        />
+        {!!errors.phone_err && <Text style={styles.errorText}>{errors.phone_err}</Text>}
+
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
+
+        <TouchableOpacity style={styles.button} onPress={submit}>
+          <Text style={styles.buttonText}>Submit</Text>
+        </TouchableOpacity>
+
+        <Button
+          style={{ marginTop: 12 }}
+          mode="outlined"
+          onPress={onSwitch || (() => navigation.navigate('Login'))}
+        >
+          Back to login
+        </Button>
+
+        <Modal visible={modalVisible} transparent={true} onDismiss={() => setModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalText}>Name is: {name}</Text>
+            <Text style={styles.modalText}>Email is: {email}</Text>
+            {/* avoid showing password in modal for safety */}
+            <Button
+              mode="contained"
+              onPress={() => { setModalVisible(false); onSuccess?.(); }}
+            >
+              Close
+            </Button>
+          </View>
+        </Modal>
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  box: {
+    backgroundColor: '#FFF8E1',
+    padding: 20,
+    borderRadius: 10,
+    margin: 16,
+  },
+  title: {
+    textAlign: 'center',
+    fontSize: 28,
+    color: '#700854ff',
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#FFE082',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: '#fff',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  toggleText: {
+    color: '#F9A825',
+    marginBottom: 10,
+  },
+  button: {
+    backgroundColor: '#FBC02D',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginTop: '50%',
+    elevation: 5,
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 12,
+  },
+});

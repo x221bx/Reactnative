@@ -1,3 +1,5 @@
+// Lightweight fetch wrapper with JSON parsing, auth header, timeout & retries.
+// Keeps a small surface (get/post/put/patch/delete) for easy use.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -5,6 +7,9 @@ const DEFAULT_TIMEOUT = 30000; // 30 seconds
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
+/**
+ * Error type used by apiClient to provide status + data context.
+ */
 class ApiError extends Error {
     constructor(message, status, data) {
         super(message);
@@ -67,6 +72,10 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Perform a request to `${API_URL}${endpoint}`.
+ * Accepts standard fetch options plus an optional `timeout` (ms).
+ */
 async function request(endpoint, options = {}) {
     const token = await getAuthToken();
     const headers = {
@@ -124,6 +133,9 @@ async function request(endpoint, options = {}) {
     }
 }
 
+/**
+ * Minimal JSON client with sensible defaults.
+ */
 export const apiClient = {
     get: (endpoint, options = {}) =>
         request(endpoint, { ...options, method: 'GET' }),
