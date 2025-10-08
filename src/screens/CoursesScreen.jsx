@@ -1,7 +1,7 @@
 ﻿import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
 import { Appbar, Searchbar, ActivityIndicator, FAB, Portal, Text } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import useCourses from '../hooks/useCourses';
 import { useTheme } from '../hooks/useTheme';
@@ -16,7 +16,10 @@ export default function CoursesScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const bottomSheetRef = useRef(null);
-  const { courses, isLoading, error, loadMore, hasMore } = useCourses();
+  const { courses, status, error } = useCourses();
+  const isFocused = useIsFocused();
+  const isLoading = status === 'loading';
+  const hasMore = false;
 
   const styles = React.useMemo(() => getStyles(theme), [theme]);
 
@@ -107,14 +110,7 @@ export default function CoursesScreen() {
     </View>
   );
 
-  const renderFooter = () => {
-    if (!hasMore) return null;
-    return (
-      <View style={styles.footer}>
-        <ActivityIndicator animating />
-      </View>
-    );
-  };
+  const renderFooter = () => null;
 
   if (error) {
     return (
@@ -179,26 +175,30 @@ export default function CoursesScreen() {
           ) : null
         }
         ListFooterComponent={renderFooter()}
-        onEndReached={hasMore ? loadMore : null}
+        onEndReached={null}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
       />
 
-      <Portal>
-        <FAB
-          style={styles.fab}
-          icon="filter"
-          onPress={openFilters}
-          label={t('courses.filters')}
-        />
-      </Portal>
+      {isFocused && (
+        <>
+          <Portal>
+            <FAB
+              style={styles.fab}
+              icon="filter"
+              onPress={openFilters}
+              label={t('courses.filters', 'Filters')}
+            />
+          </Portal>
 
-      <FiltersBottomSheet
-        bottomSheetRef={bottomSheetRef}
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        onApplyFilters={handleApplyFilters}
-      />
+          <FiltersBottomSheet
+            bottomSheetRef={bottomSheetRef}
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onApplyFilters={handleApplyFilters}
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -246,5 +246,7 @@ const getStyles = (theme) => StyleSheet.create({
     right: 16,
     bottom: 16,
     backgroundColor: theme.colors.primary,
+    zIndex: 1000,
+    elevation: 6,
   },
 });

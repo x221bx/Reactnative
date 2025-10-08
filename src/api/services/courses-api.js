@@ -1,10 +1,10 @@
 import { db } from '../config/firebase';
 import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { courses as mockCourses } from '../mock/courses-data';
-import { teachers as mockTeachers } from '../mock/teachers-data';
+import { mockCourses, mockTeachers } from '../../mock/data';
 
 // Use this flag to switch between Firebase and mock data
-const USE_MOCK_DATA = process.env.EXPO_PUBLIC_USE_MOCK_DATA === 'true';
+// Default to true for local development unless explicitly set to 'false'
+const USE_MOCK_DATA = (process.env.EXPO_PUBLIC_USE_MOCK_DATA ?? 'true') === 'true';
 
 const COLLECTION_NAME = 'courses';
 
@@ -114,10 +114,8 @@ export const coursesApi = {
 
             return { id: docSnap.id, ...docSnap.data() };
         } catch (error) {
-            console.error('Error fetching course, falling back to mock data:', error);
-            const course = mockCourses.find(c => c.id === id);
-            if (!course) throw new Error('Course not found');
-            return normalizeCourse(course);
+            console.error('Error fetching course:', error);
+            throw error;
         }
     },
 
@@ -145,15 +143,8 @@ export const coursesApi = {
                 ...courseData
             };
         } catch (error) {
-            console.error('Error creating course, falling back to mock data:', error);
-            const newCourse = {
-                id: Date.now().toString(),
-                ...courseData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            mockCourses.push(newCourse);
-            return normalizeCourse(newCourse);
+            console.error('Error creating course:', error);
+            throw error;
         }
     },
 
@@ -183,15 +174,8 @@ export const coursesApi = {
                 ...courseData
             };
         } catch (error) {
-            console.error('Error updating course, falling back to mock data:', error);
-            const index = mockCourses.findIndex(c => c.id === id);
-            if (index === -1) throw new Error('Course not found');
-            mockCourses[index] = {
-                ...mockCourses[index],
-                ...courseData,
-                updatedAt: new Date().toISOString(),
-            };
-            return normalizeCourse(mockCourses[index]);
+            console.error('Error updating course:', error);
+            throw error;
         }
     },
 
@@ -208,11 +192,8 @@ export const coursesApi = {
             await deleteDoc(docRef);
             return true;
         } catch (error) {
-            console.error('Error deleting course, falling back to mock data:', error);
-            const index = mockCourses.findIndex(c => c.id === id);
-            if (index === -1) throw new Error('Course not found');
-            mockCourses.splice(index, 1);
-            return true;
+            console.error('Error deleting course:', error);
+            throw error;
         }
     }
 };

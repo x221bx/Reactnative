@@ -6,7 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useTranslation } from '../../i18n/i18n';
 
 export default function AppHeader({ title, onBack, onHome, showMenu }) {
-  const { colors, mode, toggle } = useTheme();
+  const { colors, isDark, toggleTheme } = useTheme();
   const { t, lang, setLang } = useTranslation();
   const navigation = (() => { try { return useNavigation(); } catch { return null; } })();
   return (
@@ -38,8 +38,8 @@ export default function AppHeader({ title, onBack, onHome, showMenu }) {
         <TouchableOpacity onPress={() => setLang(lang === 'ar' ? 'en' : 'ar')} style={[styles.btn, { borderColor: colors.border, marginRight: 8 }]}> 
           <Text style={[styles.btnText, { color: colors.text }]}>{lang === 'ar' ? 'EN' : 'AR'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={toggle} style={[styles.btn, { borderColor: colors.border }]}> 
-          <Text style={[styles.btnText, { color: colors.text }]}>{mode === 'dark' ? t('action.light') : t('action.dark')}</Text>
+        <TouchableOpacity onPress={toggleTheme} style={[styles.btn, { borderColor: colors.border }]}> 
+          <Text style={[styles.btnText, { color: colors.text }]}>{isDark ? t('action.light') : t('action.dark')}</Text>
         </TouchableOpacity>
       </View>
     </View>

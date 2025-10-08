@@ -9,7 +9,7 @@ import { useTranslation } from '../i18n/i18n';
 import { MaterialIcons } from '@expo/vector-icons';
 
 // Screens
-import HomeScreen from '../screens/HomeScreen';
+import HomeScreen from '../screens/HomeScreen.jsx';
 import TeachersScreen from '../screens/TeachersScreen';
 import TeacherDetailScreen from '../screens/TeacherDetailScreen';
 import CoursesScreen from '../screens/CoursesScreen';
@@ -102,6 +102,8 @@ function RootDrawer() {
       <Drawer.Screen name="Courses" component={CoursesScreen} />
       <Drawer.Screen name="Teachers" component={TeachersScreen} />
       <Drawer.Screen name="Wishlist" component={WishlistScreen} />
+      <Drawer.Screen name="CourseDetail" component={CourseDetailScreen} options={{ drawerItemStyle: { display: 'none' } }} />
+      <Drawer.Screen name="TeacherDetail" component={TeacherDetailScreen} options={{ drawerItemStyle: { display: 'none' } }} />
       <Drawer.Screen name="Login" options={{ title: "Login" }}>
         {(props) => (
           <LoginScreen {...props} onHome={() => props.navigation.navigate("Home")} onSuccess={() => props.navigation.navigate("Home")} onSwitch={() => props.navigation.navigate("Register")} />
@@ -155,8 +157,6 @@ export default function AppNavigator() {
         }}
       >
         <Stack.Screen name="Root" component={RootDrawer} options={{ headerShown: false }} />
-        <Stack.Screen name="TeacherDetail" component={TeacherDetailScreen} />
-        <Stack.Screen name="CourseDetail" component={CourseDetailScreen} />
         {/* Auth flow is always available as modal */}
         <Stack.Screen name="Auth" component={AuthStack} options={{ headerShown: false }} />
       </Stack.Navigator>

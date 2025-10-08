@@ -30,7 +30,7 @@ export default function UserDashboardScreen({ onHome }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <AppHeader title="My Courses" onHome={onHome} />
+      <AppHeader title="My Courses" onHome={onHome} showMenu />
       <View style={{ padding: 16 }}>
         <FlatList
           data={paginated}

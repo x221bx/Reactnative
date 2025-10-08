@@ -19,7 +19,7 @@ export default function TeacherDetailScreen({ teacherId, onBack, onHome }) {
   if (!teacher) {
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]}> 
-        <AppHeader title="Teacher" onBack={onBack} />
+        <AppHeader title="Teacher" onBack={onBack} showMenu />
         <Text style={[styles.title, { color: colors.text, textAlign: 'center', marginTop: 16 }]}>Teacher not found</Text>
       </View>
     );
@@ -28,7 +28,7 @@ export default function TeacherDetailScreen({ teacherId, onBack, onHome }) {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Breadcrumbs items={[{ label: 'Home', onPress: onHome }, { label: 'Teachers', onPress: onBack }, { label: teacher.name }]} />
-      <AppHeader title={teacher.name} onBack={onBack} onHome={onHome} />
+      <AppHeader title={teacher.name} onBack={onBack} onHome={onHome} showMenu />
       <Image source={{ uri: teacher.image }} style={styles.avatar} />
       <Text style={[styles.title, { color: colors.text }]}>{teacher.name}</Text>
       {!!teacher.subject && <Text style={[styles.meta, { color: colors.muted }]}>{teacher.subject}</Text>}

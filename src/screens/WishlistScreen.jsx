@@ -20,7 +20,7 @@ export default function WishlistScreen({ onHome }) {
   const { pageCount, paginated } = paginate(items, page, 8);
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <AppHeader title="Wishlist" onHome={onHome} />
+      <AppHeader title="Wishlist" onHome={onHome} showMenu />
       <View style={{ padding: 16 }}>
         <FlatList
           data={paginated}

@@ -12,15 +12,19 @@ export default function LoginScreen({ onSuccess, onSwitch, onHome }) {
   const [form, setForm] = useState({ email: '', password: '' });
   const [errs, setErrs] = useState({});
 
-  const submit = () => {
+  const submit = async () => {
     const e = {};
     if (!form.email) e.email = 'Email is required';
     if (!form.password || form.password.length < 6) e.password = 'Password must be at least 6 chars';
     setErrs(e);
     if (Object.keys(e).length) return;
     clearError();
-    login(form.email, form.password);
-    if (!error) onSuccess?.();
+    try {
+      await login(form.email, form.password);
+      onSuccess?.();
+    } catch (err) {
+      // error state is set in context; UI below will show it
+    }
   };
 
   return (

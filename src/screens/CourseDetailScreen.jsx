@@ -32,7 +32,7 @@ export default function CourseDetailScreen({ courseId, onBack, onHome, onLogin }
   if (!course) {
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]}> 
-        <AppHeader title="Course" onBack={onBack} />
+        <AppHeader title="Course" onBack={onBack} showMenu />
         <Text style={[styles.title, { color: colors.text, textAlign: 'center', marginTop: 16 }]}>Course not found</Text>
       </View>
     );
@@ -41,7 +41,7 @@ export default function CourseDetailScreen({ courseId, onBack, onHome, onLogin }
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Breadcrumbs items={[{ label: 'Home', onPress: onHome }, { label: 'Courses', onPress: onBack }, { label: course.title }]} />
-      <AppHeader title={course.title} onBack={onBack} onHome={onHome} />
+      <AppHeader title={course.title} onBack={onBack} onHome={onHome} showMenu />
       <Image source={{ uri: course.image }} style={styles.image} />
       <Text style={[styles.title, { color: colors.text }]}>{course.title}</Text>
       <Text style={[styles.meta, { color: colors.muted }]}>{course.category || 'General'}</Text>

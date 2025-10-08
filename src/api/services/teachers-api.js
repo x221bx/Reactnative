@@ -3,7 +3,8 @@ import { collection, query, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc }
 import { teachers as mockTeachers } from '../mock/teachers-data';
 
 // Use this flag to switch between Firebase and mock data
-const USE_MOCK_DATA = process.env.EXPO_PUBLIC_USE_MOCK_DATA === 'true';
+// Default to true for local development unless explicitly set to 'false'
+const USE_MOCK_DATA = (process.env.EXPO_PUBLIC_USE_MOCK_DATA ?? 'true') === 'true';
 
 const COLLECTION_NAME = 'teachers';
 
@@ -43,16 +44,9 @@ export const teachersApi = {
 
             return teachers;
         } catch (error) {
-            console.error('Error fetching teachers, falling back to mock data:', error);
-            let filteredTeachers = [...mockTeachers];
-            if (filters.search) {
-                const searchLower = filters.search.toLowerCase();
-                filteredTeachers = filteredTeachers.filter(teacher =>
-                    teacher.name.toLowerCase().includes(searchLower) ||
-                    (teacher.specialization || teacher.subject || '').toLowerCase().includes(searchLower)
-                );
-            }
-            return filteredTeachers;
+            console.error('Error fetching teachers:', error);
+            // No mock fallback – return empty list gracefully
+            return [];
         }
     },
 
@@ -73,10 +67,8 @@ export const teachersApi = {
 
             return { id: docSnap.id, ...docSnap.data() };
         } catch (error) {
-            console.error('Error fetching teacher, falling back to mock data:', error);
-            const teacher = mockTeachers.find(t => t.id === id);
-            if (!teacher) throw new Error('Teacher not found');
-            return teacher;
+            console.error('Error fetching teacher:', error);
+            throw error;
         }
     },
 
@@ -104,15 +96,8 @@ export const teachersApi = {
                 ...teacherData
             };
         } catch (error) {
-            console.error('Error creating teacher, falling back to mock data:', error);
-            const newTeacher = {
-                id: Date.now().toString(),
-                ...teacherData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-            mockTeachers.push(newTeacher);
-            return newTeacher;
+            console.error('Error creating teacher:', error);
+            throw error;
         }
     },
 
@@ -142,15 +127,8 @@ export const teachersApi = {
                 ...teacherData
             };
         } catch (error) {
-            console.error('Error updating teacher, falling back to mock data:', error);
-            const index = mockTeachers.findIndex(t => t.id === id);
-            if (index === -1) throw new Error('Teacher not found');
-            mockTeachers[index] = {
-                ...mockTeachers[index],
-                ...teacherData,
-                updatedAt: new Date().toISOString(),
-            };
-            return mockTeachers[index];
+            console.error('Error updating teacher:', error);
+            throw error;
         }
     },
 
@@ -167,11 +145,8 @@ export const teachersApi = {
             await deleteDoc(docRef);
             return true;
         } catch (error) {
-            console.error('Error deleting teacher, falling back to mock data:', error);
-            const index = mockTeachers.findIndex(t => t.id === id);
-            if (index === -1) throw new Error('Teacher not found');
-            mockTeachers.splice(index, 1);
-            return true;
+            console.error('Error deleting teacher:', error);
+            throw error;
         }
     }
 };

@@ -9,6 +9,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Check for stored auth on mount
     React.useEffect(() => {
@@ -30,34 +31,44 @@ export function AuthProvider({ children }) {
 
     const login = useCallback(async (email, password) => {
         try {
+            setError(null);
             const result = await signInWithEmailAndPassword(auth, email, password);
+            // try restore role from storage, else infer by email
+            const stored = await AsyncStorage.getItem('auth_user');
+            const storedRole = stored ? (JSON.parse(stored).role || null) : null;
+            const role = storedRole || (email?.endsWith?.('@admin.com') ? 'admin' : 'student');
             const userData = {
                 uid: result.user.uid,
                 email: result.user.email,
                 displayName: result.user.displayName,
                 photoURL: result.user.photoURL,
+                role,
             };
             setUser(userData);
             await AsyncStorage.setItem('auth_user', JSON.stringify(userData));
             return userData;
         } catch (error) {
+            setError(error?.message || 'Login failed');
             throw new Error(error.message);
         }
     }, []);
 
-    const register = useCallback(async (email, password) => {
+    const register = useCallback(async (email, password, role = 'student') => {
         try {
+            setError(null);
             const result = await createUserWithEmailAndPassword(auth, email, password);
             const userData = {
                 uid: result.user.uid,
                 email: result.user.email,
                 displayName: result.user.displayName,
                 photoURL: result.user.photoURL,
+                role,
             };
             setUser(userData);
             await AsyncStorage.setItem('auth_user', JSON.stringify(userData));
             return userData;
         } catch (error) {
+            setError(error?.message || 'Registration failed');
             throw new Error(error.message);
         }
     }, []);
@@ -72,9 +83,11 @@ export function AuthProvider({ children }) {
         }
     }, []);
 
+    const clearError = useCallback(() => setError(null), []);
+
     const value = useMemo(
-        () => ({ user, loading, login, register, logout }),
-        [user, loading, login, register, logout]
+        () => ({ user, loading, error, clearError, login, register, logout, isAdmin: (user?.role === 'admin') || (user?.email?.endsWith?.('@admin.com')) }),
+        [user, loading, error, clearError, login, register, logout]
     );
 
     if (loading) {

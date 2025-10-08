@@ -20,7 +20,7 @@ export default function FavoritesScreen({ onHome }) {
   const { pageCount, paginated } = paginate(items, page, 8);
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <AppHeader title="Favorites" onHome={onHome} />
+      <AppHeader title="Favorites" onHome={onHome} showMenu />
       <View style={{ padding: 16 }}>
         <FlatList
           data={paginated}
