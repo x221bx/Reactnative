@@ -1,0 +1,26 @@
+/* Global styles for web (react-native-web) */
+
+:root {
+  --primary: #2196F3;
+  --bg: #ffffff;
+  --text: #111111;
+}
+
+html, body, #root { height: 100%; }
+* { box-sizing: border-box; }
+
+/* Improve default font rendering */
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Make menus/portals scrollable if too tall */
+[role="menu"], .menu-content {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}
+
