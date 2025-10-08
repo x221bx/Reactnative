@@ -11,6 +11,7 @@ import {
   setFilters,
   clearFilters
 } from '../redux/slices/teachersSlice';
+import { teachersApi } from '../api/services/teachers-api';
 
 export default function useTeachers(filters = {}) {
   const dispatch = useDispatch();
@@ -45,7 +46,23 @@ export default function useTeachers(filters = {}) {
     filters: currentFilters,
     getTeacherById,
     updateFilters,
-    resetFilters
+    resetFilters,
+    // Admin helpers
+    addTeacher: async (teacherData) => {
+      const created = await teachersApi.create(teacherData);
+      dispatch(fetchTeachers(currentFilters));
+      return created;
+    },
+    updateTeacher: async (teacherData) => {
+      if (!teacherData?.id) throw new Error('updateTeacher requires id');
+      const updated = await teachersApi.update(teacherData.id, teacherData);
+      dispatch(fetchTeachers(currentFilters));
+      return updated;
+    },
+    removeTeacher: async (id) => {
+      await teachersApi.delete(id);
+      dispatch(fetchTeachers(currentFilters));
+      return true;
+    }
   };
 }
-

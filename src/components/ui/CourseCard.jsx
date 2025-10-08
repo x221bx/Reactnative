@@ -4,17 +4,24 @@ import { Text, Card, IconButton } from 'react-native-paper';
 import { useTheme } from '../../hooks/useTheme';
 import RatingStars from './RatingStars';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectWishlist, addToWishlist, removeFromWishlist } from '../../redux/slices/wishlistSlice';
 
-const CourseCard = ({ course, horizontal = false }) => {
+const CourseCard = ({ course, horizontal = false, style }) => {
     const { theme } = useTheme();
     const navigation = useNavigation();
+    const dispatch = useDispatch();
+    const wishlist = useSelector(selectWishlist);
+    const inWishlist = wishlist.includes(String(course?.id));
 
     const handlePress = () => {
         navigation.navigate('CourseDetail', { courseId: course.id });
     };
 
     const handleFavorite = () => {
-        // TODO: Implement favorite toggle
+        if (!course?.id) return;
+        if (inWishlist) dispatch(removeFromWishlist(course.id));
+        else dispatch(addToWishlist(course.id));
     };
 
     const handleAddToCart = () => {
@@ -27,24 +34,26 @@ const CourseCard = ({ course, horizontal = false }) => {
             style={[
                 styles.card,
                 horizontal && styles.horizontalCard,
-                { backgroundColor: theme.colors.surface }
+                { backgroundColor: theme.colors.surface },
+                style,
             ]}
             onPress={handlePress}
         >
             <Card.Cover
-                source={{ uri: course.thumbnail }}
+                source={{ uri: course.thumbnail || course.image }}
                 style={[styles.image, horizontal && styles.horizontalImage]}
             />
             <Card.Content style={styles.content}>
                 <View style={styles.header}>
-                    <Text variant="labelMedium" style={styles.category}>
-                        {course.category}
+                    <Text variant="labelMedium" style={[styles.category, { backgroundColor: theme.colors.tertiary + '22', color: theme.colors.tertiary }]}>
+                        {course.category || course.level || 'General'}
                     </Text>
                     <IconButton
-                        icon="heart-outline"
+                        icon={inWishlist ? 'heart' : 'heart-outline'}
                         size={20}
                         onPress={handleFavorite}
                         style={styles.favoriteButton}
+                        iconColor={inWishlist ? theme.colors.error : undefined}
                     />
                 </View>
 
@@ -56,15 +65,20 @@ const CourseCard = ({ course, horizontal = false }) => {
                     {course.title}
                 </Text>
 
-                <View style={styles.instructor}>
+                <Pressable
+                    onPress={() => navigation.navigate('TeacherDetail', { teacherId: course.teacherId })}
+                    style={styles.instructor}
+                    accessibilityRole="button"
+                    accessibilityLabel="Open teacher details"
+                >
                     <Image
-                        source={{ uri: course.instructor.avatar }}
+                        source={{ uri: course.instructor?.avatar }}
                         style={styles.instructorAvatar}
                     />
                     <Text variant="labelMedium" numberOfLines={1}>
-                        {course.instructor.name}
+                        {course.instructor?.name || 'Teacher'}
                     </Text>
-                </View>
+                </Pressable>
 
                 <View style={styles.footer}>
                     <RatingStars
@@ -78,14 +92,14 @@ const CourseCard = ({ course, horizontal = false }) => {
                             variant="titleMedium"
                             style={[styles.price, { color: theme.colors.primary }]}
                         >
-                            ${course.price}
+                            {typeof course.price === 'number' ? `$${Number(course.price).toFixed(0)}` : 'Free'}
                         </Text>
                         {course.originalPrice > course.price && (
                             <Text
                                 variant="labelSmall"
                                 style={[styles.originalPrice, { color: theme.colors.disabled }]}
                             >
-                                ${course.originalPrice}
+                                ${Number(course.originalPrice).toFixed(0)}
                             </Text>
                         )}
                     </View>
@@ -112,7 +126,7 @@ const styles = StyleSheet.create({
         margin: 8,
         borderRadius: 12,
         overflow: 'hidden',
-        width: 240,
+        width: '100%',
     },
     horizontalCard: {
         width: '100%',
@@ -136,6 +150,9 @@ const styles = StyleSheet.create({
     },
     category: {
         textTransform: 'uppercase',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
     },
     favoriteButton: {
         margin: 0,

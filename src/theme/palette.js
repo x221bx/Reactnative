@@ -7,6 +7,8 @@ export const light = {
   secondaryContainer: '#E1F5FE',
   onSecondary: '#FFFFFF',
   onSecondaryContainer: '#00658B',
+  tertiary: '#7E57C2',
+  onTertiary: '#FFFFFF',
   background: '#FFFFFF',
   surface: '#FFFFFF',
   surfaceVariant: '#F5F5F5',
@@ -40,6 +42,8 @@ export const dark = {
   secondaryContainer: '#1A3B4D',
   onSecondary: '#000000',
   onSecondaryContainer: '#E1F5FE',
+  tertiary: '#B39DDB',
+  onTertiary: '#000000',
   background: '#121212',
   surface: '#121212',
   surfaceVariant: '#1E1E1E',
@@ -63,5 +67,4 @@ export const dark = {
     level3: '#252525',
   }
 };
-
 

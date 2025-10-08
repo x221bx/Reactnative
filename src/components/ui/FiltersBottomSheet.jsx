@@ -22,6 +22,8 @@ const RATINGS = [
     { value: 3.0, label: '3.0 & up' },
 ];
 
+const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
+
 const FiltersBottomSheet = ({
     bottomSheetRef,
     filters,
@@ -49,6 +51,21 @@ const FiltersBottomSheet = ({
         onFiltersChange({
             ...filters,
             maxPrice: price,
+        });
+    }, [filters, onFiltersChange]);
+
+    const handleMinPriceChange = useCallback((price) => {
+        const clamped = Math.min(price, filters.maxPrice);
+        onFiltersChange({
+            ...filters,
+            minPrice: clamped,
+        });
+    }, [filters, onFiltersChange]);
+
+    const handleLevelPress = useCallback((level) => {
+        onFiltersChange({
+            ...filters,
+            level: filters.level === level ? null : level,
         });
     }, [filters, onFiltersChange]);
 
@@ -109,21 +126,40 @@ const FiltersBottomSheet = ({
 
                 <View style={styles.section}>
                     <Text variant="titleMedium" style={styles.sectionTitle}>
-                        Maximum Price
+                        Level
+                    </Text>
+                    <View style={styles.ratings}>
+                        {LEVELS.map((lvl) => (
+                            <Chip
+                                key={lvl}
+                                mode="outlined"
+                                selected={filters.level === lvl}
+                                onPress={() => handleLevelPress(lvl)}
+                                style={styles.chip}
+                            >
+                                {lvl}
+                            </Chip>
+                        ))}
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text variant="titleMedium" style={styles.sectionTitle}>
+                        Minimum Price
                     </Text>
                     <View style={styles.priceContainer}>
                         <Slider
                             style={styles.slider}
                             minimumValue={0}
                             maximumValue={200}
-                            value={filters.maxPrice}
-                            onValueChange={handlePriceChange}
+                            value={filters.minPrice}
+                            onValueChange={handleMinPriceChange}
                             minimumTrackTintColor={colors.primary}
                             maximumTrackTintColor={colors.disabled}
                             thumbTintColor={colors.primary}
                         />
                         <Text variant="titleMedium" style={{ color: colors.primary }}>
-                            ${Math.round(filters.maxPrice)}
+                            ${Math.round(filters.minPrice)}
                         </Text>
                     </View>
                 </View>

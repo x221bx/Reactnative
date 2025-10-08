@@ -1,15 +1,19 @@
 import React, { useMemo } from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { useNavigation } from '@react-navigation/native';
 import useTeachers from "../hooks/useTeachers";
 import useCourses from "../hooks/useCourses";
 import { useTheme } from "../hooks/useTheme";
 import AppHeader from "../components/ui/AppHeader";
 import Breadcrumbs from "../components/ui/Breadcrumbs";
+import { useTranslation } from "../i18n/i18n";
 
 export default function TeacherDetailScreen({ teacherId, onBack, onHome }) {
   const { colors } = useTheme();
   const { teachers } = useTeachers();
   const { courses } = useCourses();
+  const navigation = useNavigation();
+  const { t } = useTranslation();
   const teacher = useMemo(() => teachers.find((t) => String(t.id) === String(teacherId)), [teachers, teacherId]);
   const teacherCourses = useMemo(
     () => courses.filter((c) => String(c.teacherId) === String(teacher?.id)),
@@ -26,26 +30,31 @@ export default function TeacherDetailScreen({ teacherId, onBack, onHome }) {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Breadcrumbs items={[{ label: 'Home', onPress: onHome }, { label: 'Teachers', onPress: onBack }, { label: teacher.name }]} />
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ paddingBottom: 24 }}>
+      <Breadcrumbs items={[{ label: t('nav.home','Home'), onPress: onHome }, { label: t('nav.teachers','Teachers'), onPress: onBack }, { label: teacher.name }]} />
       <AppHeader title={teacher.name} onBack={onBack} onHome={onHome} showMenu />
       <Image source={{ uri: teacher.image }} style={styles.avatar} />
       <Text style={[styles.title, { color: colors.text }]}>{teacher.name}</Text>
       {!!teacher.subject && <Text style={[styles.meta, { color: colors.muted }]}>{teacher.subject}</Text>}
       <Text style={[styles.meta, { color: colors.muted }]}>Rating: {Number(teacher.rating || 0).toFixed(1)}</Text>
       {!!teacher.bio && <Text style={[styles.bio, { color: colors.text }]}>{teacher.bio}</Text>}
+      <View style={{ alignItems: 'center', marginTop: 12 }}>
+        <TouchableOpacity onPress={() => navigation.navigate('TeacherChat', { teacherId: teacher.id })} style={{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}>
+          <Text style={{ color: colors.text }}>Message Teacher</Text>
+        </TouchableOpacity>
+      </View>
       <Text style={[styles.title, { fontSize: 18, marginTop: 16, color: colors.text }]}>Courses ({teacherCourses.length})</Text>
       {teacherCourses.map((c) => (
-        <View key={c.id} style={styles.courseRow}>
+        <TouchableOpacity key={c.id} style={styles.courseRow} onPress={() => navigation.navigate('CourseDetail', { courseId: c.id })}>
           <Image source={{ uri: c.image }} style={styles.courseImg} />
           <View style={{ flex: 1 }}>
             <Text style={[styles.courseTitle, { color: colors.text }]}>{c.title}</Text>
             <Text style={[styles.meta, { color: colors.muted }]}>{c.category || 'General'}</Text>
           </View>
           {typeof c.price === 'number' && <Text style={[styles.price, { color: colors.text }]}>${Number(c.price || 0).toFixed(2)}</Text>}
-        </View>
+        </TouchableOpacity>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 

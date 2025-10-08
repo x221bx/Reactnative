@@ -19,7 +19,7 @@ export default function AdminDashboardScreen({ onHome }) {
   }, [courses]);
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <AppHeader title="Admin • Dashboard" onHome={onHome} />
+      <AppHeader title="Admin • Dashboard" onHome={onHome} showMenu />
       <View style={{ padding: 16 }}>
         <View style={styles.row}>
           <Stat title="Total Courses" value={totalCourses} />

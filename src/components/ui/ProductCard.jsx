@@ -49,7 +49,7 @@ export default function ProductCard({ image, title, subtitle, price, rating, ins
 
 const styles = StyleSheet.create({
   card: { flex: 1, borderWidth: 1, borderRadius: 12, padding: 10 },
-  image: { width: '100%', aspectRatio: 16/10, borderRadius: 8, marginBottom: 8, backgroundColor: '#111' },
+  image: { width: '100%', aspectRatio: 16/10, borderRadius: 8, marginBottom: 8, backgroundColor: '#ddd' },
   title: { fontSize: 14, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   subtitle: { fontSize: 12 },
@@ -57,3 +57,4 @@ const styles = StyleSheet.create({
   rating: { fontSize: 12, fontWeight: '700' },
   price: { fontSize: 14, fontWeight: '800', marginTop: 6 },
 });
+

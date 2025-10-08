@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { View, FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import { useNavigation } from '@react-navigation/native';
 import useTeachers from "../hooks/useTeachers";
 import { useTheme } from "../hooks/useTheme";
 import AppHeader from "../components/ui/AppHeader";
@@ -15,6 +16,7 @@ export default function TeachersScreen({ onOpenTeacher, onHome }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { teachers } = useTeachers();
+  const navigation = useNavigation();
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
@@ -32,7 +34,7 @@ export default function TeachersScreen({ onOpenTeacher, onHome }) {
     <View style={[styles.container, { backgroundColor: colors.bg }]}> 
       <AppHeader title={t('teachers.title')} onHome={onHome} showMenu />
       <View style={{ padding: 16 }}>
-        <Breadcrumbs items={[{ label: 'Home', onPress: onHome }, { label: 'Teachers' }]} />
+        <Breadcrumbs items={[{ label: t('nav.home','Home'), onPress: onHome }, { label: t('nav.teachers','Teachers') }]} />
         <SearchBar value={q} onChangeText={setQ} placeholder={t('teachers.search')} />
         <FlatList
           style={{ marginTop: 12 }}
@@ -40,7 +42,7 @@ export default function TeachersScreen({ onOpenTeacher, onHome }) {
           keyExtractor={(item) => String(item.id)}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => onOpenTeacher?.(item)}>
+            <TouchableOpacity onPress={() => (onOpenTeacher ? onOpenTeacher(item) : navigation.navigate('TeacherDetail', { teacherId: item.id }))}>
               <List>
                 <List.Item>
                   <CardRow image={item.image} title={item.name} subtitle={item.title || item.specialization || '-'} metaRight={Number(item.rating || 0).toFixed(1)} />

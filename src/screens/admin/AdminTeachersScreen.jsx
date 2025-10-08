@@ -49,7 +49,7 @@ export default function AdminTeachersScreen({ onHome }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <AppHeader title="Admin • Teachers" onHome={onHome} />
+      <AppHeader title="Admin • Teachers" onHome={onHome} showMenu />
       <View style={{ padding: 16 }}>
         <Text style={[styles.section, { color: colors.text }]}>{editing ? 'Edit Teacher' : 'Add Teacher'}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>

@@ -18,12 +18,14 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import WishlistScreen from '../screens/WishlistScreen.jsx';
 import FavoritesScreen from '../screens/FavoritesScreen.jsx';
+// import AdminNavigator from './AdminNavigator';
 import AboutScreen from '../screens/AboutScreen.jsx';
 import UserDashboardScreen from '../screens/UserDashboardScreen.jsx';
 import CustomDrawerContent from '../components/navigation/CustomDrawerContent.jsx';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen.jsx';
 import AdminCoursesScreen from '../screens/admin/AdminCoursesScreen.jsx';
 import AdminTeachersScreen from '../screens/admin/AdminTeachersScreen.jsx';
+import TeacherChatScreen from '../screens/TeacherChatScreen.jsx';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -84,8 +86,7 @@ function withAuthGuard(Component) {
 function RootDrawer() {
   const { theme } = useTheme();
   const { lang } = useTranslation();
-  const { user } = useAuth();
-  const isAdmin = !!(user && user.email && user.email.endsWith('@admin.com'));
+  const { isAdmin } = useAuth();
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -104,6 +105,7 @@ function RootDrawer() {
       <Drawer.Screen name="Wishlist" component={WishlistScreen} />
       <Drawer.Screen name="CourseDetail" component={CourseDetailScreen} options={{ drawerItemStyle: { display: 'none' } }} />
       <Drawer.Screen name="TeacherDetail" component={TeacherDetailScreen} options={{ drawerItemStyle: { display: 'none' } }} />
+      <Drawer.Screen name="TeacherChat" component={TeacherChatScreen} options={{ drawerItemStyle: { display: 'none' } }} />
       <Drawer.Screen name="Login" options={{ title: "Login" }}>
         {(props) => (
           <LoginScreen {...props} onHome={() => props.navigation.navigate("Home")} onSuccess={() => props.navigation.navigate("Home")} onSwitch={() => props.navigation.navigate("Register")} />
@@ -119,9 +121,11 @@ function RootDrawer() {
       <Drawer.Screen name="About" component={AboutScreen} />
       {isAdmin && (
         <>
-          <Drawer.Screen name="AdminDashboard" component={AdminDashboardScreen} />
-          <Drawer.Screen name="AdminCourses" component={AdminCoursesScreen} />
-          <Drawer.Screen name="AdminTeachers" component={AdminTeachersScreen} />
+          <Drawer.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ title: 'Admin • Dashboard' }} />
+          <Drawer.Screen name="AdminCourses" component={AdminCoursesScreen} options={{ title: 'Admin • Courses' }} />
+          <Drawer.Screen name="AdminTeachers" component={AdminTeachersScreen} options={{ title: 'Admin • Teachers' }} />
+          <Drawer.Screen name="AdminEnrollment" component={require('../screens/admin/AdminEnrollmentScreen.jsx').default} options={{ title: 'Admin • Enrollments' }} />
+          <Drawer.Screen name="AddCourse" component={require('../screens/admin/AddCourseScreen.jsx').default} options={{ title: 'Admin • Add Course' }} />
         </>
       )}
     </Drawer.Navigator>

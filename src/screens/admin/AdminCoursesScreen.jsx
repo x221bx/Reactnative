@@ -53,7 +53,7 @@ export default function AdminCoursesScreen({ onHome }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <AppHeader title="Admin • Courses" onHome={onHome} />
+      <AppHeader title="Admin • Courses" onHome={onHome} showMenu />
       <View style={{ padding: 16 }}>
         <Text style={[styles.section, { color: colors.text }]}>{editing ? 'Edit Course' : 'Add Course'}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>

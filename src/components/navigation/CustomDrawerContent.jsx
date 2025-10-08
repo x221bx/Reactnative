@@ -28,6 +28,8 @@ export default function CustomDrawerContent({ navigation }) {
         { key: 'AdminDashboard', label: t('nav.admin', 'Admin'), icon: 'dashboard', to: 'AdminDashboard' },
         { key: 'AdminCourses', label: t('nav.adminCourses', 'Admin Courses'), icon: 'library-books', to: 'AdminCourses' },
         { key: 'AdminTeachers', label: t('nav.adminTeachers', 'Admin Teachers'), icon: 'supervisor-account', to: 'AdminTeachers' },
+        { key: 'AdminEnrollment', label: 'Enrollments', icon: 'person-add', to: 'AdminEnrollment' },
+        { key: 'AddCourse', label: 'Add Course', icon: 'playlist-add', to: 'AddCourse' },
       );
     }
     return base;
@@ -177,4 +179,3 @@ const styles = StyleSheet.create({
     opacity: 0.7
   },
 });
-

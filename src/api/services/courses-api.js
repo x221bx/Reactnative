@@ -1,6 +1,7 @@
 import { db } from '../config/firebase';
 import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { mockCourses, mockTeachers } from '../../mock/data';
+import { courses as mockCourses } from '../mock/courses-data';
+import { teachers as mockTeachers } from '../mock/teachers-data';
 
 // Use this flag to switch between Firebase and mock data
 // Default to true for local development unless explicitly set to 'false'
@@ -14,6 +15,9 @@ function normalizeCourse(course) {
     return {
         ...course,
         thumbnail: course.thumbnail || course.image,
+        level: course.level || (typeof course.price === 'number'
+            ? (course.price < 50 ? 'Beginner' : course.price < 100 ? 'Intermediate' : 'Advanced')
+            : 'Beginner'),
         instructor: teacher
             ? { name: teacher.name, avatar: teacher.image }
             : { name: 'Unknown', avatar: 'https://picsum.photos/seed/placeholder/40/40' },
@@ -40,9 +44,7 @@ export const coursesApi = {
             }
 
             if (filters.level) {
-                filteredCourses = filteredCourses.filter(course =>
-                    course.level === filters.level
-                );
+                filteredCourses = filteredCourses.filter(course => course.level === filters.level);
             }
 
             return filteredCourses.map(normalizeCourse);
@@ -67,15 +69,35 @@ export const coursesApi = {
             });
 
             // Handle search filter client-side for Firestore
+            let result = courses;
             if (filters.search) {
                 const searchLower = filters.search.toLowerCase();
-                return courses.filter(course =>
-                    course.title.toLowerCase().includes(searchLower) ||
-                    course.description.toLowerCase().includes(searchLower)
+                result = result.filter(course =>
+                    (course.title || '').toLowerCase().includes(searchLower) ||
+                    (course.description || '').toLowerCase().includes(searchLower)
                 );
             }
 
-            return courses;
+            // Dev-friendly fallback: if collection empty, use mock
+            if (!result.length) {
+                let filteredCourses = [...mockCourses];
+                if (filters.search) {
+                    const searchLower = filters.search.toLowerCase();
+                    filteredCourses = filteredCourses.filter(course =>
+                        (course.title || '').toLowerCase().includes(searchLower) ||
+                        (course.description || '').toLowerCase().includes(searchLower)
+                    );
+                }
+                if (filters.teacherId) {
+                    filteredCourses = filteredCourses.filter(course => course.teacherId === filters.teacherId);
+                }
+                if (filters.level) {
+                    filteredCourses = filteredCourses.filter(course => course.level === filters.level);
+                }
+                return filteredCourses.map(normalizeCourse);
+            }
+
+            return result;
         } catch (error) {
             console.error('Error fetching courses, falling back to mock data:', error);
             // Fallback to mock data gracefully

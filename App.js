@@ -1,4 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
+import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import React from 'react';
 import { Provider } from 'react-redux';
@@ -39,6 +41,14 @@ function ThemedPaperProvider({ children }) {
 }
 
 export default function App() {
+  React.useEffect(() => {
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.DEFAULT,
+      }).catch(() => {});
+    }
+  }, []);
   return (
     <ErrorBoundary>
       <Provider store={store}>

@@ -11,6 +11,7 @@ import {
   setFilters,
   clearFilters
 } from '../redux/slices/coursesSlice';
+import { coursesApi } from '../api/services/courses-api';
 
 export default function useCourses(filters = {}) {
   const dispatch = useDispatch();
@@ -38,6 +39,27 @@ export default function useCourses(filters = {}) {
     dispatch(clearFilters());
   };
 
+  // Admin helpers (create/update/delete)
+  const addCourse = async (courseData) => {
+    const created = await coursesApi.create(courseData);
+    // refresh list to reflect change
+    dispatch(fetchCourses(currentFilters));
+    return created;
+  };
+
+  const updateCourse = async (courseData) => {
+    if (!courseData?.id) throw new Error('updateCourse requires id');
+    const updated = await coursesApi.update(courseData.id, courseData);
+    dispatch(fetchCourses(currentFilters));
+    return updated;
+  };
+
+  const removeCourse = async (id) => {
+    await coursesApi.delete(id);
+    dispatch(fetchCourses(currentFilters));
+    return true;
+  };
+
   return {
     courses,
     status,
@@ -45,7 +67,9 @@ export default function useCourses(filters = {}) {
     filters: currentFilters,
     getCourseById,
     updateFilters,
-    resetFilters
+    resetFilters,
+    addCourse,
+    updateCourse,
+    removeCourse
   };
 }
-

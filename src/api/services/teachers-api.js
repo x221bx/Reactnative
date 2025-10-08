@@ -15,10 +15,13 @@ export const teachersApi = {
 
             if (filters.search) {
                 const searchLower = filters.search.toLowerCase();
-                filteredTeachers = filteredTeachers.filter(teacher =>
-                    teacher.name.toLowerCase().includes(searchLower) ||
-                    teacher.specialization.toLowerCase().includes(searchLower)
-                );
+                filteredTeachers = filteredTeachers.filter(teacher => {
+                    const spec = (teacher.specialization || teacher.subject || '').toLowerCase();
+                    return (
+                        (teacher.name || '').toLowerCase().includes(searchLower) ||
+                        spec.includes(searchLower)
+                    );
+                });
             }
 
             return filteredTeachers;
@@ -34,19 +37,44 @@ export const teachersApi = {
             });
 
             // Handle search filter client-side for Firestore
+            let result = teachers;
             if (filters.search) {
                 const searchLower = filters.search.toLowerCase();
-                return teachers.filter(teacher =>
-                    teacher.name.toLowerCase().includes(searchLower) ||
-                    teacher.specialization.toLowerCase().includes(searchLower)
-                );
+                result = result.filter(teacher => {
+                    const spec = (teacher.specialization || teacher.subject || '').toLowerCase();
+                    return (
+                        (teacher.name || '').toLowerCase().includes(searchLower) ||
+                        spec.includes(searchLower)
+                    );
+                });
             }
 
-            return teachers;
+            // Dev-friendly fallback: if collection empty, use mock
+            if (!result.length) {
+                let filtered = [...mockTeachers];
+                if (filters.search) {
+                    const searchLower = filters.search.toLowerCase();
+                    filtered = filtered.filter(t =>
+                        (t.name || '').toLowerCase().includes(searchLower) ||
+                        ((t.specialization || t.subject || '').toLowerCase().includes(searchLower))
+                    );
+                }
+                return filtered;
+            }
+
+            return result;
         } catch (error) {
             console.error('Error fetching teachers:', error);
-            // No mock fallback – return empty list gracefully
-            return [];
+            // Fallback to mock data on error
+            let filtered = [...mockTeachers];
+            if (filters.search) {
+                const searchLower = filters.search.toLowerCase();
+                filtered = filtered.filter(t =>
+                    (t.name || '').toLowerCase().includes(searchLower) ||
+                    ((t.specialization || t.subject || '').toLowerCase().includes(searchLower))
+                );
+            }
+            return filtered;
         }
     },
 

@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AppHeader from '../../components/ui/AppHeader';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../hooks/useTheme';
 import Input from '../../components/form/Input';
 import Button from '../../components/form/Button';
@@ -9,6 +10,7 @@ import useAuth from '../../hooks/useAuth';
 export default function LoginScreen({ onSuccess, onSwitch, onHome }) {
   const { colors } = useTheme();
   const { login, error, clearError } = useAuth();
+  const navigation = useNavigation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errs, setErrs] = useState({});
 
@@ -29,7 +31,7 @@ export default function LoginScreen({ onSuccess, onSwitch, onHome }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <AppHeader title="Login" onHome={onHome} />
+      <AppHeader title="Login" onHome={onHome || (() => navigation.navigate('Home'))} showMenu />
       <View style={{ padding: 16 }}>
         <Input label="Email" value={form.email} onChangeText={(v) => setForm((s) => ({ ...s, email: v }))} error={errs.email} />
         <View style={{ height: 8 }} />
@@ -38,7 +40,7 @@ export default function LoginScreen({ onSuccess, onSwitch, onHome }) {
         <View style={{ height: 12 }} />
         <Button title="Login" onPress={submit} />
         <View style={{ height: 8 }} />
-        <Button variant="outline" title="Create account" onPress={onSwitch} />
+        <Button variant="outline" title="Create account" onPress={onSwitch || (() => navigation.navigate('Register'))} />
       </View>
     </View>
   );
